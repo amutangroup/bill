@@ -3,25 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AmutanTech - Enterprise Billing & Client Suite</title>
+  <title>AmutanTech - Cloud Business & Billing Suite</title>
   
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-  <!-- Firebase Modular SDK -->
+  <!-- Firebase Realtime Database SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword, 
-      signInWithPopup, 
-      GoogleAuthProvider, 
-      signOut, 
-      onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -35,21 +26,13 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Global Bindings
-    window.fbAuth = auth;
     window.fbDb = db;
     window.fbRef = ref;
     window.fbSet = set;
     window.fbGet = get;
     window.fbOnValue = onValue;
-    window.fbSignIn = signInWithEmailAndPassword;
-    window.fbSignUp = createUserWithEmailAndPassword;
-    window.fbGoogleSignIn = () => signInWithPopup(auth, new GoogleAuthProvider());
-    window.fbSignOut = () => signOut(auth);
-    window.fbOnAuthStateChanged = onAuthStateChanged;
 
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
@@ -133,44 +116,38 @@
 
   <div id="toast">Notification</div>
 
-  <!-- AUTHENTICATION SCREEN -->
+  <!-- AUTHENTICATION SCREEN (USERNAME & PASSWORD ALONE) -->
   <div id="auth-screen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #060913;">
-    <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 420px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;">
+    <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 400px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;">
       <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff;">A</div>
       <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">AmutanTech Suite</h1>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Enterprise Security & Client Invoicing</p>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Cloud Business & Billing Platform</p>
       
       <div style="display: flex; gap: 8px; margin-bottom: 20px;">
         <button id="auth-tab-login" onclick="toggleAuthMode('login')" class="btn btn-cyan" style="flex:1; justify-content: center;">Login</button>
         <button id="auth-tab-signup" onclick="toggleAuthMode('signup')" class="btn btn-dark" style="flex:1; justify-content: center;">Create Account</button>
       </div>
 
-      <form id="auth-form" onsubmit="handleAuthSubmit(event)" style="text-align: left;">
+      <form onsubmit="handleAuthSubmit(event)" style="text-align: left;">
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="auth-email" required class="form-control" placeholder="name@company.com" />
+          <label>Username</label>
+          <input type="text" id="auth-username" value="admin" required class="form-control" placeholder="Enter username" />
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" id="auth-pass" required class="form-control" placeholder="••••••••" />
+          <input type="password" id="auth-password" value="amutan123" required class="form-control" placeholder="Enter password" />
         </div>
         <div id="auth-role-group" class="form-group hidden">
-          <label>Team Role</label>
+          <label>Account Role</label>
           <select id="auth-role" class="form-control">
-            <option value="Admin">Admin (Full Control)</option>
+            <option value="Admin">Admin (Full Access)</option>
             <option value="Accountant">Accountant (Invoices & Expenses)</option>
             <option value="Viewer">Viewer (Read Only)</option>
           </select>
         </div>
         <div id="auth-err" class="hidden" style="color: var(--rose); font-size: 12px; margin-bottom: 12px;"></div>
-        <button type="submit" id="auth-submit-btn" class="btn btn-cyan" style="width: 100%; padding: 12px; justify-content: center; font-size: 14px;">Sign In</button>
+        <button type="submit" id="auth-submit-btn" class="btn btn-cyan" style="width: 100%; padding: 12px; justify-content: center; font-size: 14px;">Sign In to Dashboard</button>
       </form>
-
-      <div style="margin: 18px 0; color: var(--text-muted); font-size: 12px;">OR</div>
-      <button onclick="handleGoogleSignIn()" class="btn btn-dark" style="width: 100%; padding: 10px; justify-content: center; gap: 8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
-        Continue with Google
-      </button>
     </div>
   </div>
 
@@ -186,7 +163,7 @@
             <img id="sidebar-logo-img" class="hidden" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo" />
           </div>
           <div>
-            <h2 style="font-size: 14px; font-weight: 800;" id="user-display-email">AmutanTech</h2>
+            <h2 style="font-size: 14px; font-weight: 800;" id="user-display-name">admin</h2>
             <p style="font-size: 11px; color: var(--cyan); font-weight: 600;" id="user-display-role">⚡ Admin Role</p>
           </div>
         </div>
@@ -543,17 +520,31 @@
     let userRole = 'Admin';
     let myChart = null;
 
-    let appData = {
+    // Local Users Registry
+    let registeredUsers = JSON.parse(localStorage.getItem('amutan_users')) || {
+      'admin': { password: 'amutan123', role: 'Admin' }
+    };
+
+    const DEFAULT_DATA = {
       logoData: '',
       accentColor: '#0284c7',
       upiId: 'amutantech@okaxis',
       emailjsKey: '',
       emailjsService: '',
       emailjsTemplate: '',
-      customers: [],
-      invoices: [],
-      expenses: []
+      customers: [
+        { id: 'c1', name: 'Apex Solutions Inc.', email: 'apex@example.com', phone: '+91 98401 23456', address: 'Bangalore, India' },
+        { id: 'c2', name: 'Veloce Logistics Ltd', email: 'veloce@example.com', phone: '+91 98840 98765', address: 'Chennai, India' }
+      ],
+      invoices: [
+        { id: 'inv1', num: 'AT-2026-001', custId: 'c1', date: '2026-08-16', due: '2026-08-30', status: 'Paid', note: 'Standard software deliverables included', items: [{ desc: 'Custom Software Architecture', qty: 1, rate: 45000, amt: 45000 }], total: 45000 }
+      ],
+      expenses: [
+        { id: 'e1', title: 'AWS Cloud Server Hosting', cat: 'Hosting & Cloud', amt: 3500, date: '2026-08-05', custId: 'c1' }
+      ]
     };
+
+    let appData = JSON.parse(localStorage.getItem('amutan_data')) || DEFAULT_DATA;
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -572,6 +563,8 @@
       if (hash.startsWith('#/pay/')) {
         const invId = hash.replace('#/pay/', '');
         renderPublicPortal(invId);
+      } else {
+        checkAuth();
       }
     });
 
@@ -580,65 +573,142 @@
       document.getElementById('app-screen').classList.add('hidden');
       document.getElementById('portal-screen').classList.remove('hidden');
 
-      const checkRef = window.fbRef(window.fbDb, `public_invoices/${invId}`);
-      window.fbGet(checkRef).then((snapshot) => {
-        const inv = snapshot.val();
-        if (inv) {
-          document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
-            inv, 
-            inv.customer, 
-            inv.accentColor || '#0284c7', 
-            inv.upiId || 'amutantech@okaxis',
-            inv.logoData || ''
-          );
-          generateQRCode('portal-qrcode', inv.upiId || 'amutantech@okaxis', inv.total);
-        } else {
-          document.getElementById('portal-printable-invoice').innerHTML = `<h2 style="color:#f43f5e; text-align:center;">Invoice Not Found or Expired.</h2>`;
-        }
-      });
+      if (window.fbDb && window.fbRef && window.fbGet) {
+        const checkRef = window.fbRef(window.fbDb, `public_invoices/${invId}`);
+        window.fbGet(checkRef).then((snapshot) => {
+          const inv = snapshot.val();
+          if (inv) {
+            document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
+              inv, 
+              inv.customer, 
+              inv.accentColor || '#0284c7', 
+              inv.upiId || 'amutantech@okaxis',
+              inv.logoData || ''
+            );
+            generateQRCode('portal-qrcode', inv.upiId || 'amutantech@okaxis', inv.total);
+          } else {
+            fallbackLocalPortal(invId);
+          }
+        }).catch(() => fallbackLocalPortal(invId));
+      } else {
+        fallbackLocalPortal(invId);
+      }
     }
 
-    // AUTH HANDLING
+    function fallbackLocalPortal(invId) {
+      const inv = (appData.invoices || []).find(i => i.id === invId);
+      if (inv) {
+        const cust = (appData.customers || []).find(c => c.id === inv.custId);
+        document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
+          inv, cust, appData.accentColor, appData.upiId, appData.logoData
+        );
+        generateQRCode('portal-qrcode', appData.upiId, inv.total);
+      } else {
+        document.getElementById('portal-printable-invoice').innerHTML = `<h2 style="color:#f43f5e; text-align:center;">Invoice Not Found or Expired.</h2>`;
+      }
+    }
+
+    // USERNAME & PASSWORD AUTH
     function toggleAuthMode(m) {
       authMode = m;
       document.getElementById('auth-tab-login').className = m === 'login' ? 'btn btn-cyan' : 'btn btn-dark';
       document.getElementById('auth-tab-signup').className = m === 'signup' ? 'btn btn-cyan' : 'btn btn-dark';
-      document.getElementById('auth-submit-btn').innerText = m === 'login' ? 'Sign In' : 'Register Organization';
+      document.getElementById('auth-submit-btn').innerText = m === 'login' ? 'Sign In to Dashboard' : 'Register Account';
       document.getElementById('auth-role-group').classList.toggle('hidden', m === 'login');
+      document.getElementById('auth-err').classList.add('hidden');
     }
 
-    async function handleAuthSubmit(e) {
+    function handleAuthSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-pass').value.trim();
+      const u = document.getElementById('auth-username').value.trim();
+      const p = document.getElementById('auth-password').value.trim();
       const errEl = document.getElementById('auth-err');
       errEl.classList.add('hidden');
 
-      try {
-        if (authMode === 'login') {
-          await window.fbSignIn(window.fbAuth, email, pass);
+      if (authMode === 'login') {
+        if (registeredUsers[u] && registeredUsers[u].password === p) {
+          currentUser = u;
+          userRole = registeredUsers[u].role || 'Admin';
+          localStorage.setItem('amutan_current_user', u);
+          checkAuth();
         } else {
-          const cred = await window.fbSignUp(window.fbAuth, email, pass);
-          const role = document.getElementById('auth-role').value;
-          await window.fbSet(window.fbRef(window.fbDb, `users/${cred.user.uid}/profile`), { email, role });
+          errEl.innerText = 'Invalid username or password.';
+          errEl.classList.remove('hidden');
         }
-      } catch (err) {
-        errEl.innerText = err.message;
-        errEl.classList.remove('hidden');
-      }
-    }
-
-    async function handleGoogleSignIn() {
-      try {
-        await window.fbGoogleSignIn();
-      } catch (err) {
-        alert(err.message);
+      } else {
+        if (registeredUsers[u]) {
+          errEl.innerText = 'Username already exists.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        const r = document.getElementById('auth-role').value;
+        registeredUsers[u] = { password: p, role: r };
+        localStorage.setItem('amutan_users', JSON.stringify(registeredUsers));
+        currentUser = u;
+        userRole = r;
+        localStorage.setItem('amutan_current_user', u);
+        showToast('Account registered successfully!');
+        checkAuth();
       }
     }
 
     function handleSignOut() {
-      window.fbSignOut();
+      currentUser = null;
+      localStorage.removeItem('amutan_current_user');
+      checkAuth();
     }
+
+    function checkAuth() {
+      const saved = localStorage.getItem('amutan_current_user');
+      if (saved && registeredUsers[saved]) {
+        currentUser = saved;
+        userRole = registeredUsers[saved].role || 'Admin';
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-display-name').innerText = currentUser;
+        document.getElementById('user-display-role').innerText = `⚡ ${userRole} Role`;
+        enforceRBAC();
+        syncCloud();
+        render();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    }
+
+    function enforceRBAC() {
+      const writeElements = document.querySelectorAll('.role-write');
+      writeElements.forEach(el => {
+        el.style.display = (userRole === 'Viewer') ? 'none' : '';
+      });
+    }
+
+    // REALTIME DATABASE SYNC
+    function persist() {
+      localStorage.setItem('amutan_data', JSON.stringify(appData));
+      if (window.fbDb && window.fbRef && window.fbSet && currentUser) {
+        window.fbSet(window.fbRef(window.fbDb, `org_data/${currentUser}`), appData).catch(e => console.log('Sync status:', e.message));
+      }
+      render();
+    }
+
+    function syncCloud() {
+      if (window.fbDb && window.fbRef && window.fbOnValue && currentUser) {
+        const dataRef = window.fbRef(window.fbDb, `org_data/${currentUser}`);
+        window.fbOnValue(dataRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            appData = { ...appData, ...val };
+            localStorage.setItem('amutan_data', JSON.stringify(appData));
+            render();
+          }
+        });
+      }
+    }
+
+    window.addEventListener('firebase-ready', () => {
+      if (currentUser) syncCloud();
+    });
 
     // LOGO UPLOAD
     function handleLogoUpload(e) {
@@ -659,58 +729,6 @@
       reader.readAsDataURL(file);
     }
 
-    // FIREBASE AUTH & REALTIME LISTENER
-    window.addEventListener('firebase-ready', () => {
-      window.fbOnAuthStateChanged(window.fbAuth, (user) => {
-        if (user && !window.location.hash.startsWith('#/pay/')) {
-          currentUser = user;
-          document.getElementById('auth-screen').classList.add('hidden');
-          document.getElementById('app-screen').classList.remove('hidden');
-          document.getElementById('user-display-email').innerText = user.email.split('@')[0];
-
-          window.fbGet(window.fbRef(window.fbDb, `users/${user.uid}/profile`)).then((snap) => {
-            const prof = snap.val();
-            userRole = (prof && prof.role) ? prof.role : 'Admin';
-            document.getElementById('user-display-role').innerText = `⚡ ${userRole} Role`;
-            enforceRBAC();
-          });
-
-          const userRef = window.fbRef(window.fbDb, `users/${user.uid}/data`);
-          window.fbOnValue(userRef, (snapshot) => {
-            const val = snapshot.val();
-            if (val) {
-              appData = { ...appData, ...val };
-              document.getElementById('cfg-emailjs-key').value = appData.emailjsKey || '';
-              document.getElementById('cfg-emailjs-service').value = appData.emailjsService || '';
-              document.getElementById('cfg-emailjs-template').value = appData.emailjsTemplate || '';
-              document.getElementById('cfg-upi-id').value = appData.upiId || 'amutantech@okaxis';
-              document.getElementById('cfg-accent').value = appData.accentColor || '#0284c7';
-              render();
-            }
-          });
-        } else if (!window.location.hash.startsWith('#/pay/')) {
-          currentUser = null;
-          document.getElementById('auth-screen').classList.remove('hidden');
-          document.getElementById('app-screen').classList.add('hidden');
-        }
-      });
-    });
-
-    function enforceRBAC() {
-      const writeElements = document.querySelectorAll('.role-write');
-      writeElements.forEach(el => {
-        if (userRole === 'Viewer') {
-          el.style.display = 'none';
-        }
-      });
-    }
-
-    function persist() {
-      if (!currentUser) return;
-      window.fbSet(window.fbRef(window.fbDb, `users/${currentUser.uid}/data`), appData);
-      render();
-    }
-
     // TABS
     function switchTab(t) {
       ['dashboard', 'invoices', 'customers', 'expenses', 'settings'].forEach(tab => {
@@ -725,7 +743,7 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // RENDER FUNCTIONS
+    // RENDER
     function render() {
       const img = document.getElementById('sidebar-logo-img');
       const txt = document.getElementById('sidebar-logo-txt');
@@ -737,6 +755,12 @@
         img.classList.add('hidden');
         txt.classList.remove('hidden');
       }
+
+      document.getElementById('cfg-emailjs-key').value = appData.emailjsKey || '';
+      document.getElementById('cfg-emailjs-service').value = appData.emailjsService || '';
+      document.getElementById('cfg-emailjs-template').value = appData.emailjsTemplate || '';
+      document.getElementById('cfg-upi-id').value = appData.upiId || 'amutantech@okaxis';
+      document.getElementById('cfg-accent').value = appData.accentColor || '#0284c7';
 
       const rev = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
       const exp = (appData.expenses || []).reduce((a, b) => a + Number(b.amt || 0), 0);
@@ -865,7 +889,7 @@
       if (expC) expC.innerHTML = '<option value="">General Overhead</option>' + (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     }
 
-    // WHATSAPP DISPATCH
+    // WHATSAPP BILLING DISPATCH
     function sendWhatsAppReminder(invId) {
       const inv = appData.invoices.find(i => i.id === invId);
       const cust = appData.customers.find(c => c.id === inv.custId);
@@ -885,7 +909,7 @@
       showToast('Client Portal Link Copied to Clipboard!');
     }
 
-    // EMAILJS RECEIPT DISPATCH
+    // EMAILJS AUTOMATED RECEIPT DISPATCH
     function sendAutomatedEmailReceipt(inv, cust) {
       if (!appData.emailjsKey || !appData.emailjsService || !appData.emailjsTemplate) return;
       if (!cust.email) return;
@@ -976,14 +1000,16 @@
       appData.invoices.push(inv);
       persist();
 
-      // Publish snapshot to public portal path with logo
-      await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${inv.id}`), {
-        ...inv,
-        customer: cust,
-        accentColor: appData.accentColor || '#0284c7',
-        upiId: appData.upiId || 'amutantech@okaxis',
-        logoData: appData.logoData || ''
-      });
+      // Publish snapshot to public portal path
+      if (window.fbDb && window.fbRef && window.fbSet) {
+        await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${inv.id}`), {
+          ...inv,
+          customer: cust,
+          accentColor: appData.accentColor || '#0284c7',
+          upiId: appData.upiId || 'amutantech@okaxis',
+          logoData: appData.logoData || ''
+        });
+      }
 
       closeModal('modal-invoice');
       previewInvoice(inv.id);
@@ -1073,7 +1099,6 @@
 
       return `
         <div style="color:#0f172a; font-family:sans-serif;">
-          <!-- Invoice Header -->
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
             <div style="display:flex; gap:14px; align-items:center;">
               ${logoHTML}
@@ -1089,7 +1114,6 @@
             </div>
           </div>
 
-          <!-- Client & Meta Info -->
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
             <div>
               <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed To:</strong>
@@ -1104,7 +1128,6 @@
             </div>
           </div>
 
-          <!-- Line Items -->
           <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
             <thead>
               <tr style="background:${accent}15; border-bottom:2px solid ${accent}; text-align:left;">
@@ -1128,7 +1151,6 @@
             </tbody>
           </table>
 
-          <!-- QR & Total -->
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:24px;">
             <div style="display:flex; gap:16px; align-items:center;">
               <div id="admin-qrcode" class="qr-target" style="width:72px; height:72px;"></div>
