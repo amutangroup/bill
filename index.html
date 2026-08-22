@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmutanTech - Cloud Business Suite</title>
+  
+  <!-- Firebase Modular SDK Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0dNkpqAqyAQqKDOWi-kE1Q126TpI-RKk",
+      authDomain: "bill-d765d.firebaseapp.com",
+      databaseURL: "https://bill-d765d-default-rtdb.firebaseio.com",
+      projectId: "bill-d765d",
+      storageBucket: "bill-d765d.firebasestorage.app",
+      messagingSenderId: "179578956483",
+      appId: "1:179578956483:web:53891d0a658d3e94d6d076",
+      measurementId: "G-C4FW5K5DG9"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    // Make database methods globally accessible
+    window.fbDb = db;
+    window.fbRef = ref;
+    window.fbSet = set;
+    window.fbGet = get;
+    window.fbOnValue = onValue;
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --cyan: #06b6d4;
+      --cyan-hover: #0891b2;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --accent: #0284c7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Layout */
+    .app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+    @media (min-width: 768px) {
+      .app-layout { flex-direction: row; }
+      .sidebar { width: 260px; flex-shrink: 0; min-height: 100vh; }
+      .main-content { flex: 1; padding: 32px; overflow-y: auto; }
+    }
+    .main-content { padding: 20px; }
+    .sidebar { background-color: #020617; border-right: 1px solid var(--card-border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+    
+    /* Buttons & Nav */
+    .nav-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.15s; margin-bottom: 4px; }
+    .nav-btn:hover { background: #1e293b; color: #fff; }
+    .nav-btn.active { background: #1e293b; color: var(--cyan); border-left: 4px solid var(--cyan); }
+    .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-cyan { background: var(--cyan); color: #fff; }
+    .btn-cyan:hover { background: var(--cyan-hover); }
+    .btn-emerald { background: var(--emerald); color: #fff; }
+    .btn-rose { background: var(--rose); color: #fff; }
+    .btn-dark { background: #334155; color: #fff; }
+    .btn-dark:hover { background: #475569; }
+    
+    /* Grid & Cards */
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .card-val { font-size: 26px; font-weight: 800; color: #fff; }
+    
+    /* Tables */
+    .table-container { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th { background: #0f172a; padding: 12px 16px; color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--card-border); }
+    td { padding: 12px 16px; border-bottom: 1px solid #33415555; }
+    tr:hover { background: #33415533; }
+    
+    /* Badges */
+    .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .badge-paid { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+    .badge-pending { background: #78350f; color: #fbbf24; border: 1px solid #d97706; }
+    
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; overflow-y: auto; }
+    .modal-box { background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; width: 100%; max-width: 550px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; margin-bottom: 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .form-control { width: 100%; background: #1e293b; border: 1px solid var(--card-border); border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 13px; outline: none; }
+    .form-control:focus { border-color: var(--cyan); }
+    
+    /* Print Styles */
+    @media print {
+      body * { visibility: hidden !important; }
+      #printable-invoice, #printable-invoice * { visibility: visible !important; }
+      #printable-invoice { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; background: white; color: #0f172a; font-family: sans-serif; }
+      .no-print { display: none !important; }
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOGIN SCREEN -->
+  <div id="auth-screen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #020617;">
+    <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 400px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;">
+      <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 12px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff;">A</div>
+      <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">AmutanTech</h1>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Cloud Firebase Realtime Business Suite</p>
+      
+      <form id="login-form" onsubmit="handleLogin(event)" style="text-align: left;">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="login-user" value="admin" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" value="amutan123" required class="form-control" />
+        </div>
+        <div id="login-err" class="hidden" style="color: var(--rose); font-size: 12px; margin-bottom: 12px;">Invalid login! Use admin / amutan123</div>
+        <button type="submit" class="btn btn-cyan" style="width: 100%; padding: 10px; justify-content: center; margin-top: 8px;">Sign In to Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MAIN APPLICATION -->
+  <div id="app-screen" class="hidden app-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar no-print">
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 16px;">
+          <div id="sidebar-logo-box" style="width: 36px; height: 36px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden; shrink: 0;">
+            <span id="sidebar-logo-txt">A</span>
+            <img id="sidebar-logo-img" class="hidden" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo" />
+          </div>
+          <div>
+            <h2 style="font-size: 15px; font-weight: 800;">AmutanTech</h2>
+            <p style="font-size: 11px; color: var(--cyan); font-weight: 600;">⚡ Firebase Cloud Synced</p>
+          </div>
+        </div>
+
+        <nav>
+          <button class="nav-btn active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">📊 Net Profit & Stats</button>
+          <button class="nav-btn" id="tab-btn-invoices" onclick="switchTab('invoices')">🧾 Bill Generator</button>
+          <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Customers</button>
+          <button class="nav-btn" id="tab-btn-expenses" onclick="switchTab('expenses')">💳 Expense Recorder</button>
+        </nav>
+      </div>
+
+      <div style="border-top: 1px solid var(--card-border); padding-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <label style="background: #1e293b; padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; cursor: pointer; color: var(--cyan); font-weight: 600;">
+          <span>📤 Upload Invoice Logo</span>
+          <input type="file" accept="image/*" onchange="uploadLogo(event)" class="hidden" />
+        </label>
+        <div style="font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>Net Profit:</span>
+          <strong id="side-profit" style="color: var(--emerald);">₹0</strong>
+        </div>
+        <button onclick="handleLogout()" class="btn btn-dark" style="justify-content: center;">🚪 Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h1 style="font-size: 22px; font-weight: 800;">Financial Overview</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Direct 0% Tax Calculation (Synced to Realtime Database)</p>
+          </div>
+          <button onclick="openInvoiceModal()" class="btn btn-cyan">➕ Create Bill</button>
+        </div>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-title">Total Revenue <span>📈</span></div>
+            <div class="card-val" id="stat-rev">₹0</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Total Expenses <span>📉</span></div>
+            <div class="card-val" id="stat-exp">₹0</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Net Profit <span>💰</span></div>
+            <div class="card-val" id="stat-prof" style="color: var(--emerald);">₹0</div>
+            <div id="stat-margin" style="font-size: 11px; color: var(--emerald); font-weight: 600; margin-top: 4px;">0% Margin</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Customers <span>👥</span></div>
+            <div class="card-val" id="stat-cust">0</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Recent Invoices</h3>
+            <div id="dash-recent-invoices" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+          <div class="card">
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Recent Expenses</h3>
+            <div id="dash-recent-expenses" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: INVOICES -->
+      <section id="tab-invoices" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h1 style="font-size: 22px; font-weight: 800;">Bill Generator (0% Tax)</h1>
+          <button onclick="openInvoiceModal()" class="btn btn-cyan">➕ New Invoice</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice #</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Due</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="invoices-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: CUSTOMERS -->
+      <section id="tab-customers" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h1 style="font-size: 22px; font-weight: 800;">Customers</h1>
+          <button onclick="openCustomerModal()" class="btn btn-emerald">👥 Add Customer</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer / Company</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>City / Address</th>
+                <th>Total Invoiced</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: EXPENSES -->
+      <section id="tab-expenses" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h1 style="font-size: 22px; font-weight: 800;">Expense Recorder</h1>
+          <button onclick="openExpenseModal()" class="btn btn-rose">💳 Add Expense</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Tag / Customer</th>
+                <th>Amount</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD CUSTOMER -->
+  <div id="modal-customer" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">Add New Customer</h3>
+        <button onclick="closeModal('modal-customer')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <form onsubmit="saveCustomer(event)">
+        <div class="form-group">
+          <label>Customer / Business Name</label>
+          <input type="text" id="cust-name" required class="form-control" placeholder="e.g. Apex Corp" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="cust-email" class="form-control" placeholder="client@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="cust-phone" class="form-control" placeholder="+91 9876543210" />
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="cust-address" class="form-control" placeholder="Chennai, India" />
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+          <button type="button" onclick="closeModal('modal-customer')" class="btn btn-dark">Cancel</button>
+          <button type="submit" class="btn btn-emerald">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD INVOICE -->
+  <div id="modal-invoice" class="modal-overlay">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">Generate Bill (0% Direct Tax)</h3>
+        <button onclick="closeModal('modal-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <form onsubmit="saveInvoice(event)">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Customer</label>
+            <select id="inv-cust-id" required class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label>Invoice #</label>
+            <input type="text" id="inv-num" required class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="inv-date" required class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" id="inv-due" required class="form-control" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Software Deliverables</label>
+            <button type="button" onclick="addInvoiceItemRow()" class="btn btn-cyan" style="padding: 4px 8px; font-size: 11px;">➕ Add Item</button>
+          </div>
+          <div id="inv-items-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+
+        <div style="background: #020617; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="font-size: 12px; color: var(--text-muted);">Grand Total (0% Tax):</span>
+          <span id="inv-total-txt" style="font-size: 18px; font-weight: 800; color: var(--emerald);">₹0</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Payment Terms / Note</label>
+            <input type="text" id="inv-note" value="Thank you for your business!" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="inv-status" class="form-control">
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" onclick="closeModal('modal-invoice')" class="btn btn-dark">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Save & View PDF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD EXPENSE -->
+  <div id="modal-expense" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">Record Business Expense</h3>
+        <button onclick="closeModal('modal-expense')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <form onsubmit="saveExpense(event)">
+        <div class="form-group">
+          <label>Title / Description</label>
+          <input type="text" id="exp-title" required class="form-control" placeholder="AWS Servers, Domain, OpenAI API" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="exp-cat" class="form-control">
+            <option>Hosting & Cloud</option>
+            <option>Domain & SSL</option>
+            <option>API & Tools</option>
+            <option>Freelancer / Subcontract</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="exp-amt" min="0" required class="form-control" placeholder="2500" />
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="exp-date" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Customer Tag (Optional)</label>
+          <select id="exp-cust-id" class="form-control"><option value="">General Overhead</option></select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+          <button type="button" onclick="closeModal('modal-expense')" class="btn btn-dark">Cancel</button>
+          <button type="submit" class="btn btn-rose">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PREVIEW INVOICE & PDF -->
+  <div id="modal-view-invoice" class="modal-overlay">
+    <div class="modal-box" style="max-width: 750px; background: #0f172a;">
+      <div class="modal-header no-print">
+        <h3 style="font-size: 16px; font-weight: 700;">Printable Invoice Preview</h3>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="window.print()" class="btn btn-cyan">🖨️ Print / Save PDF</button>
+          <button onclick="closeModal('modal-view-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+        </div>
+      </div>
+
+      <!-- Live Customizer (No Print) -->
+      <div class="no-print" style="background: #020617; padding: 10px; border-radius: 8px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; font-size: 12px;">
+        <label>Theme Color: <input type="color" id="pdf-accent" value="#0284c7" onchange="updateAccentColor(this.value)" style="background: none; border: none; cursor: pointer;" /></label>
+        <label style="flex: 1;">Bank / UPI Note: <input type="text" id="pdf-bank-input" placeholder="UPI: amutan@upi" oninput="updateBankNote(this.value)" class="form-control" style="display: inline-block; width: 60%; padding: 4px 8px;" /></label>
+      </div>
+
+      <!-- Printable Area -->
+      <div id="printable-invoice" style="background: #fff; color: #0f172a; padding: 24px; border-radius: 8px;"></div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT FIREBASE REALTIME CLOUD INTEGRATION -->
+  <script>
+    const DEFAULT_DATA = {
+      isLoggedIn: false,
+      logoData: '',
+      accentColor: '#0284c7',
+      bankNote: 'UPI: amutantech@okaxis | Bank: AmutanTech Account',
+      customers: [
+        { id: 'c1', name: 'Apex Solutions Inc.', email: 'apex@example.com', phone: '+91 98401 23456', address: 'Bangalore, India' },
+        { id: 'c2', name: 'Veloce Logistics Ltd', email: 'veloce@example.com', phone: '+91 98840 98765', address: 'Chennai, India' }
+      ],
+      invoices: [
+        { id: 'inv1', num: 'AT-2026-001', custId: 'c1', date: '2026-08-16', due: '2026-08-30', status: 'Paid', note: 'Standard support included', items: [{ desc: 'Custom Software Portal', amt: 45000 }], total: 45000 }
+      ],
+      expenses: [
+        { id: 'e1', title: 'AWS Cloud Server Hosting', cat: 'Hosting & Cloud', amt: 3500, date: '2026-08-05', custId: 'c1' }
+      ]
+    };
+
+    let appData = JSON.parse(localStorage.getItem('amutan_fast_data')) || DEFAULT_DATA;
+    let currentInvoice = null;
+
+    // SYNC TO FIREBASE CLOUD & LOCAL STORAGE
+    function persist() {
+      localStorage.setItem('amutan_fast_data', JSON.stringify(appData));
+      
+      // Realtime Database Sync
+      if (window.fbDb && window.fbRef && window.fbSet) {
+        window.fbSet(window.fbRef(window.fbDb, 'amutantech_cloud_data'), {
+          logoData: appData.logoData || '',
+          accentColor: appData.accentColor || '#0284c7',
+          bankNote: appData.bankNote || '',
+          customers: appData.customers || [],
+          invoices: appData.invoices || [],
+          expenses: appData.expenses || []
+        }).catch(err => console.log('Firebase sync notice:', err.message));
+      }
+      render();
+    }
+
+    // FIREBASE REALTIME LISTENER
+    window.addEventListener('firebase-ready', () => {
+      if (window.fbDb && window.fbRef && window.fbOnValue) {
+        const cloudRef = window.fbRef(window.fbDb, 'amutantech_cloud_data');
+        window.fbOnValue(cloudRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            appData.customers = val.customers || [];
+            appData.invoices = val.invoices || [];
+            appData.expenses = val.expenses || [];
+            if (val.logoData) appData.logoData = val.logoData;
+            if (val.accentColor) appData.accentColor = val.accentColor;
+            if (val.bankNote) appData.bankNote = val.bankNote;
+            localStorage.setItem('amutan_fast_data', JSON.stringify(appData));
+            render();
+          }
+        });
+      }
+    });
+
+    function formatINR(val) {
+      return '₹' + Number(val || 0).toLocaleString('en-IN');
+    }
+
+    // AUTH
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      if (u === 'admin' && p === 'amutan123') {
+        appData.isLoggedIn = true;
+        document.getElementById('login-err').classList.add('hidden');
+        persist();
+        checkAuth();
+      } else {
+        document.getElementById('login-err').classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      appData.isLoggedIn = false;
+      persist();
+      checkAuth();
+    }
+
+    function checkAuth() {
+      if (appData.isLoggedIn) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        render();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    }
+
+    // TABS
+    function switchTab(t) {
+      ['dashboard', 'invoices', 'customers', 'expenses'].forEach(tab => {
+        document.getElementById('tab-' + tab).classList.add('hidden');
+        document.getElementById('tab-btn-' + tab).classList.remove('active');
+      });
+      document.getElementById('tab-' + t).classList.remove('hidden');
+      document.getElementById('tab-btn-' + t).classList.add('active');
+    }
+
+    // MODALS
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // LOGO
+    function uploadLogo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const r = new FileReader();
+        r.onload = function(evt) {
+          appData.logoData = evt.target.result;
+          persist();
+        };
+        r.readAsDataURL(file);
+      }
+    }
+
+    // RENDER
+    function render() {
+      const img = document.getElementById('sidebar-logo-img');
+      const txt = document.getElementById('sidebar-logo-txt');
+      if (appData.logoData) {
+        img.src = appData.logoData; img.classList.remove('hidden'); txt.classList.add('hidden');
+      } else {
+        img.classList.add('hidden'); txt.classList.remove('hidden');
+      }
+
+      const rev = appData.invoices.reduce((a, b) => a + Number(b.total || 0), 0);
+      const exp = appData.expenses.reduce((a, b) => a + Number(b.amt || 0), 0);
+      const prof = rev - exp;
+      const margin = rev > 0 ? ((prof / rev) * 100).toFixed(1) : 0;
+
+      document.getElementById('stat-rev').innerText = formatINR(rev);
+      document.getElementById('stat-exp').innerText = formatINR(exp);
+      document.getElementById('stat-prof').innerText = formatINR(prof);
+      document.getElementById('side-profit').innerText = formatINR(prof);
+      document.getElementById('stat-margin').innerText = margin + '% Net Margin';
+      document.getElementById('stat-cust').innerText = appData.customers.length;
+
+      document.getElementById('dash-recent-invoices').innerHTML = appData.invoices.slice(-4).reverse().map(i => `
+        <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid #33415533;">
+          <span><strong>${i.num}</strong> (${(appData.customers.find(c => c.id === i.custId) || {}).name || 'Client'})</span>
+          <span style="color:var(--emerald); font-weight:700;">${formatINR(i.total)}</span>
+        </div>
+      `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No invoices yet</div>';
+
+      document.getElementById('dash-recent-expenses').innerHTML = appData.expenses.slice(-4).reverse().map(e => `
+        <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid #33415533;">
+          <span>${e.title}</span>
+          <span style="color:var(--rose); font-weight:700;">${formatINR(e.amt)}</span>
+        </div>
+      `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No expenses yet</div>';
+
+      renderInvoicesTable();
+      renderCustomersTable();
+      renderExpensesTable();
+      populateDropdowns();
+    }
+
+    function renderInvoicesTable() {
+      document.getElementById('invoices-tbody').innerHTML = appData.invoices.map(i => {
+        const c = appData.customers.find(cust => cust.id === i.custId) || { name: '—' };
+        const isPaid = i.status === 'Paid';
+        return `
+          <tr>
+            <td><strong>${i.num}</strong></td>
+            <td>${c.name}</td>
+            <td>${i.date}</td>
+            <td>${i.due}</td>
+            <td><strong>${formatINR(i.total)}</strong></td>
+            <td><span onclick="toggleInvStatus('${i.id}')" class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${i.status} ↻</span></td>
+            <td style="text-align:right;">
+              <button onclick="previewInvoice('${i.id}')" class="btn btn-cyan" style="padding:4px 8px; font-size:11px;">PDF</button>
+              <button onclick="deleteInv('${i.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:6px;">🗑</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderCustomersTable() {
+      document.getElementById('customers-tbody').innerHTML = appData.customers.map(c => {
+        const total = appData.invoices.filter(i => i.custId === c.id).reduce((a, b) => a + Number(b.total || 0), 0);
+        return `
+          <tr>
+            <td><strong>${c.name}</strong></td>
+            <td>${c.email || '—'}</td>
+            <td>${c.phone || '—'}</td>
+            <td>${c.address || '—'}</td>
+            <td style="color:var(--emerald); font-weight:700;">${formatINR(total)}</td>
+            <td style="text-align:right;">
+              <button onclick="deleteCustomer('${c.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer;">🗑</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderExpensesTable() {
+      document.getElementById('expenses-tbody').innerHTML = appData.expenses.map(e => {
+        const c = appData.customers.find(cust => cust.id === e.custId) || { name: 'Overhead' };
+        return `
+          <tr>
+            <td>${e.title}</td>
+            <td><span style="background:#334155; padding:2px 6px; border-radius:4px; font-size:10px;">${e.cat}</span></td>
+            <td>${e.date}</td>
+            <td>${c.name}</td>
+            <td style="color:var(--rose); font-weight:700;">${formatINR(e.amt)}</td>
+            <td style="text-align:right;">
+              <button onclick="deleteExpense('${e.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer;">🗑</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function populateDropdowns() {
+      const invC = document.getElementById('inv-cust-id');
+      const expC = document.getElementById('exp-cust-id');
+      if (invC) invC.innerHTML = appData.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      if (expC) expC.innerHTML = '<option value="">General Overhead</option>' + appData.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    // ACTIONS
+    function openCustomerModal() { openModal('modal-customer'); }
+    function saveCustomer(e) {
+      e.preventDefault();
+      appData.customers.push({
+        id: 'c_' + Date.now(),
+        name: document.getElementById('cust-name').value.trim(),
+        email: document.getElementById('cust-email').value.trim(),
+        phone: document.getElementById('cust-phone').value.trim(),
+        address: document.getElementById('cust-address').value.trim()
+      });
+      persist(); closeModal('modal-customer');
+    }
+    function deleteCustomer(id) {
+      if (confirm('Delete customer?')) { appData.customers = appData.customers.filter(c => c.id !== id); persist(); }
+    }
+
+    function openInvoiceModal() {
+      if (!appData.customers.length) { alert('Create a customer first!'); openCustomerModal(); return; }
+      document.getElementById('inv-num').value = 'AT-' + new Date().getFullYear() + '-' + String(appData.invoices.length + 1).padStart(3, '0');
+      document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
+      const d = new Date(); d.setDate(d.getDate() + 14);
+      document.getElementById('inv-due').value = d.toISOString().split('T')[0];
+      document.getElementById('inv-items-container').innerHTML = '';
+      addInvoiceItemRow('Custom Software Development', 25000);
+      openModal('modal-invoice');
+    }
+
+    function addInvoiceItemRow(desc = '', amt = 0) {
+      const c = document.getElementById('inv-items-container');
+      const id = 'row_' + Date.now() + Math.random().toString(36).substr(2, 3);
+      const div = document.createElement('div');
+      div.id = id;
+      div.style.cssText = 'display:flex; gap:6px;';
+      div.innerHTML = `
+        <input type="text" value="${desc}" placeholder="Deliverable / Software service" class="form-control item-desc" required style="flex:1;" />
+        <input type="number" value="${amt}" placeholder="Price (₹)" oninput="calcInvTotal()" class="form-control item-amt" required style="width:110px; text-align:right;" />
+        <button type="button" onclick="document.getElementById('${id}').remove(); calcInvTotal();" style="background:none; border:none; color:var(--rose); cursor:pointer;">✕</button>
+      `;
+      c.appendChild(div);
+      calcInvTotal();
+    }
+
+    function calcInvTotal() {
+      let t = 0;
+      document.querySelectorAll('.item-amt').forEach(i => t += Number(i.value || 0));
+      document.getElementById('inv-total-txt').innerText = formatINR(t);
+      return t;
+    }
+
+    function saveInvoice(e) {
+      e.preventDefault();
+      const descs = document.querySelectorAll('.item-desc');
+      const amts = document.querySelectorAll('.item-amt');
+      const items = [];
+      let total = 0;
+      for (let i = 0; i < descs.length; i++) {
+        const d = descs[i].value.trim(); const a = Number(amts[i].value || 0);
+        if (d) { items.push({ desc: d, amt: a }); total += a; }
+      }
+      const inv = {
+        id: 'inv_' + Date.now(),
+        num: document.getElementById('inv-num').value.trim(),
+        custId: document.getElementById('inv-cust-id').value,
+        date: document.getElementById('inv-date').value,
+        due: document.getElementById('inv-due').value,
+        note: document.getElementById('inv-note').value.trim(),
+        status: document.getElementById('inv-status').value,
+        items, total
+      };
+      appData.invoices.push(inv);
+      persist(); closeModal('modal-invoice'); previewInvoice(inv.id);
+    }
+
+    function toggleInvStatus(id) {
+      const inv = appData.invoices.find(i => i.id === id);
+      if (inv) { inv.status = inv.status === 'Paid' ? 'Pending' : 'Paid'; persist(); }
+    }
+    function deleteInv(id) {
+      if (confirm('Delete invoice?')) { appData.invoices = appData.invoices.filter(i => i.id !== id); persist(); }
+    }
+
+    // PRINT / PDF
+    function previewInvoice(id) {
+      currentInvoice = appData.invoices.find(i => i.id === id);
+      if (!currentInvoice) return;
+      document.getElementById('pdf-accent').value = appData.accentColor;
+      document.getElementById('pdf-bank-input').value = appData.bankNote;
+      renderPrintable();
+      openModal('modal-view-invoice');
+    }
+
+    function renderPrintable() {
+      if (!currentInvoice) return;
+      const cust = appData.customers.find(c => c.id === currentInvoice.custId) || { name: 'Customer' };
+      const accent = appData.accentColor || '#0284c7';
+      const logo = appData.logoData ? `<img src="${appData.logoData}" style="height:50px; max-width:140px; object-fit:contain;" />` : `<div style="width:44px; height:44px; background:${accent}; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:22px;">A</div>`;
+
+      document.getElementById('printable-invoice').innerHTML = `
+        <div style="font-family:sans-serif; color:#0f172a;">
+          <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; gap:12px; align-items:center;">
+              ${logo}
+              <div>
+                <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">AmutanTech</h1>
+                <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Software Creation & Digital Engineering</p>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <h2 style="font-size:20px; font-weight:900; margin:0; color:#334155;">INVOICE</h2>
+              <div style="font-size:12px; font-weight:700; color:#64748b; margin-top:2px;"># ${currentInvoice.num}</div>
+              <div style="display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-top:4px; ${currentInvoice.status === 'Paid' ? 'background:#d1fae5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'}">${currentInvoice.status.toUpperCase()}</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
+            <div>
+              <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed To:</strong>
+              <div style="font-size:14px; font-weight:800; margin-top:2px;">${cust.name}</div>
+              <div style="color:#64748b;">${cust.email || ''} • ${cust.phone || ''}</div>
+              <div style="color:#64748b;">${cust.address || ''}</div>
+            </div>
+            <div style="text-align:right;">
+              <div><span style="color:#64748b;">Date:</span> <strong>${currentInvoice.date}</strong></div>
+              <div><span style="color:#64748b;">Due Date:</span> <strong>${currentInvoice.due}</strong></div>
+              <div><span style="color:#64748b;">Tax Rate:</span> <strong style="color:#10b981;">0% Direct (No Tax)</strong></div>
+            </div>
+          </div>
+
+          <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
+            <thead>
+              <tr style="background:${accent}15; border-bottom:2px solid ${accent}; text-align:left;">
+                <th style="padding:8px;">#</th>
+                <th style="padding:8px;">Deliverable Description</th>
+                <th style="padding:8px; text-align:right;">Amount (INR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${currentInvoice.items.map((it, idx) => `
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:8px; color:#64748b;">${idx + 1}</td>
+                  <td style="padding:8px; font-weight:600;">${it.desc}</td>
+                  <td style="padding:8px; text-align:right; font-weight:800;">${formatINR(it.amt)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
+            <div style="max-width:300px;">
+              <strong style="color:#64748b; font-size:10px; text-transform:uppercase;">Notes:</strong>
+              <div style="color:#475569; margin-top:2px;">${currentInvoice.note || 'Thank you!'}</div>
+            </div>
+            <div style="text-align:right; width:200px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#64748b;">
+                <span>Tax (0%):</span> <span>₹0.00</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-top:2px solid ${accent}; padding-top:6px; font-size:16px; font-weight:900; color:${accent};">
+                <span>Total:</span> <span>${formatINR(currentInvoice.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #e2e8f0; padding-top:12px; font-size:11px; display:flex; justify-content:space-between; color:#64748b;">
+            <div>
+              <strong>Payment Info:</strong> <span id="preview-bank">${appData.bankNote}</span>
+            </div>
+            <div>AmutanTech • Direct Invoicing</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateAccentColor(c) { appData.accentColor = c; persist(); renderPrintable(); }
+    function updateBankNote(t) { appData.bankNote = t; persist(); document.getElementById('preview-bank').innerText = t; }
+
+    // EXPENSES
+    function openExpenseModal() { openModal('modal-expense'); document.getElementById('exp-date').value = new Date().toISOString().split('T')[0]; }
+    function saveExpense(e) {
+      e.preventDefault();
+      appData.expenses.push({
+        id: 'e_' + Date.now(),
+        title: document.getElementById('exp-title').value.trim(),
+        cat: document.getElementById('exp-cat').value,
+        amt: Number(document.getElementById('exp-amt').value || 0),
+        date: document.getElementById('exp-date').value,
+        custId: document.getElementById('exp-cust-id').value
+      });
+      persist(); closeModal('modal-expense');
+    }
+    function deleteExpense(id) {
+      if (confirm('Delete expense?')) { appData.expenses = appData.expenses.filter(e => e.id !== id); persist(); }
+    }
+
+    window.onload = checkAuth;
+  </script>
+</body>
+</html>
