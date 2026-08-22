@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AmutanTech - Enterprise Billing & Client Suite</title>
   
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -37,7 +38,7 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Export Firebase APIs to Global Window
+    // Global Bindings
     window.fbAuth = auth;
     window.fbDb = db;
     window.fbRef = ref;
@@ -121,8 +122,8 @@
     
     @media print {
       body * { visibility: hidden !important; }
-      #printable-invoice, #printable-invoice * { visibility: visible !important; }
-      #printable-invoice { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
+      #printable-invoice, #printable-invoice *, #portal-printable-invoice, #portal-printable-invoice * { visibility: visible !important; }
+      #printable-invoice, #portal-printable-invoice { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
       .no-print { display: none !important; }
     }
     .hidden { display: none !important; }
@@ -180,9 +181,9 @@
     <aside class="sidebar no-print">
       <div>
         <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 20px;">
-          <div id="sidebar-logo-box" style="width: 36px; height: 36px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden; flex-shrink: 0;">
+          <div id="sidebar-logo-box" style="width: 40px; height: 40px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden; flex-shrink: 0;">
             <span id="sidebar-logo-txt">A</span>
-            <img id="sidebar-logo-img" class="hidden" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo" />
+            <img id="sidebar-logo-img" class="hidden" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo" />
           </div>
           <div>
             <h2 style="font-size: 14px; font-weight: 800;" id="user-display-email">AmutanTech</h2>
@@ -195,16 +196,20 @@
           <button class="nav-btn" id="tab-btn-invoices" onclick="switchTab('invoices')">🧾 Bill Generator</button>
           <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Customers</button>
           <button class="nav-btn" id="tab-btn-expenses" onclick="switchTab('expenses')">💳 Expenses</button>
-          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings & API</button>
+          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings & Logo</button>
         </nav>
       </div>
 
       <div style="border-top: 1px solid var(--card-border); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+        <label class="role-write" style="background: #131b2e; border: 1px dashed var(--card-border); padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; cursor: pointer; color: var(--cyan); font-weight: 600;">
+          <span>📤 Upload Invoice Logo</span>
+          <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="hidden" />
+        </label>
         <button onclick="handleSignOut()" class="btn btn-dark" style="justify-content: center;">🚪 Sign Out</button>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="main-content">
 
       <!-- TAB 1: DASHBOARD -->
@@ -324,19 +329,36 @@
         </div>
       </section>
 
-      <!-- TAB 5: SETTINGS & EMAIL API -->
+      <!-- TAB 5: SETTINGS & LOGO -->
       <section id="tab-settings" class="hidden">
         <div style="margin-bottom: 20px;">
           <h1 style="font-size: 22px; font-weight: 800;">Enterprise Configuration</h1>
-          <p style="font-size: 13px; color: var(--text-muted);">EmailJS Automated Receipts & Branding</p>
+          <p style="font-size: 13px; color: var(--text-muted);">Logo Branding, EmailJS Dispatcher & UPI Defaults</p>
         </div>
 
         <div class="grid-2">
           <div class="card">
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Company Logo & Branding</h3>
+            <div class="form-group">
+              <label>Upload Brand Logo (PNG/JPG)</label>
+              <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Default UPI ID (For Invoices & QR)</label>
+              <input type="text" id="cfg-upi-id" class="form-control" placeholder="amutantech@okaxis" />
+            </div>
+            <div class="form-group">
+              <label>Invoice Theme Color</label>
+              <input type="color" id="cfg-accent" style="height: 38px; width: 100%; border: none; background: transparent; cursor: pointer;" />
+            </div>
+            <button onclick="saveSettings()" class="btn btn-cyan role-write">Save Branding Config</button>
+          </div>
+
+          <div class="card">
             <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">EmailJS Dispatcher Settings</h3>
             <div class="form-group">
               <label>EmailJS Public Key</label>
-              <input type="text" id="cfg-emailjs-key" class="form-control" placeholder="user_xxx or public_key" />
+              <input type="text" id="cfg-emailjs-key" class="form-control" placeholder="public_key" />
             </div>
             <div class="form-group">
               <label>Service ID</label>
@@ -348,26 +370,13 @@
             </div>
             <button onclick="saveSettings()" class="btn btn-cyan role-write">Save Email Settings</button>
           </div>
-
-          <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Branding & Payment Defaults</h3>
-            <div class="form-group">
-              <label>Default UPI ID</label>
-              <input type="text" id="cfg-upi-id" class="form-control" placeholder="amutantech@okaxis" />
-            </div>
-            <div class="form-group">
-              <label>Invoice Theme Color</label>
-              <input type="color" id="cfg-accent" style="height: 38px; width: 100%; border: none; background: transparent; cursor: pointer;" />
-            </div>
-            <button onclick="saveSettings()" class="btn btn-cyan role-write">Save Business Config</button>
-          </div>
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- PUBLIC READ-ONLY CLIENT PORTAL VIEW -->
+  <!-- PUBLIC READ-ONLY CLIENT PORTAL -->
   <div id="portal-screen" class="hidden" style="min-height: 100vh; background: #060913; padding: 24px; display: flex; justify-content: center;">
     <div style="width: 100%; max-width: 800px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -575,7 +584,13 @@
       window.fbGet(checkRef).then((snapshot) => {
         const inv = snapshot.val();
         if (inv) {
-          document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(inv, inv.customer, inv.accentColor || '#0284c7', inv.upiId || 'amutantech@okaxis');
+          document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
+            inv, 
+            inv.customer, 
+            inv.accentColor || '#0284c7', 
+            inv.upiId || 'amutantech@okaxis',
+            inv.logoData || ''
+          );
           generateQRCode('portal-qrcode', inv.upiId || 'amutantech@okaxis', inv.total);
         } else {
           document.getElementById('portal-printable-invoice').innerHTML = `<h2 style="color:#f43f5e; text-align:center;">Invoice Not Found or Expired.</h2>`;
@@ -625,7 +640,26 @@
       window.fbSignOut();
     }
 
-    // FIREBASE STATE LISTENER
+    // LOGO UPLOAD
+    function handleLogoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 512000) {
+        alert('Please upload an image smaller than 500KB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        appData.logoData = evt.target.result;
+        persist();
+        showToast('Company logo updated and synced!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // FIREBASE AUTH & REALTIME LISTENER
     window.addEventListener('firebase-ready', () => {
       window.fbOnAuthStateChanged(window.fbAuth, (user) => {
         if (user && !window.location.hash.startsWith('#/pay/')) {
@@ -634,7 +668,6 @@
           document.getElementById('app-screen').classList.remove('hidden');
           document.getElementById('user-display-email').innerText = user.email.split('@')[0];
 
-          // Fetch Role and Bind User Data
           window.fbGet(window.fbRef(window.fbDb, `users/${user.uid}/profile`)).then((snap) => {
             const prof = snap.val();
             userRole = (prof && prof.role) ? prof.role : 'Admin';
@@ -642,7 +675,6 @@
             enforceRBAC();
           });
 
-          // Bind Realtime Listener to user-isolated path
           const userRef = window.fbRef(window.fbDb, `users/${user.uid}/data`);
           window.fbOnValue(userRef, (snapshot) => {
             const val = snapshot.val();
@@ -695,6 +727,17 @@
 
     // RENDER FUNCTIONS
     function render() {
+      const img = document.getElementById('sidebar-logo-img');
+      const txt = document.getElementById('sidebar-logo-txt');
+      if (appData.logoData) {
+        img.src = appData.logoData;
+        img.classList.remove('hidden');
+        txt.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        txt.classList.remove('hidden');
+      }
+
       const rev = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
       const exp = (appData.expenses || []).reduce((a, b) => a + Number(b.amt || 0), 0);
       const prof = rev - exp;
@@ -822,7 +865,7 @@
       if (expC) expC.innerHTML = '<option value="">General Overhead</option>' + (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     }
 
-    // ONE-CLICK WHATSAPP BILLING DISPATCH
+    // WHATSAPP DISPATCH
     function sendWhatsAppReminder(invId) {
       const inv = appData.invoices.find(i => i.id === invId);
       const cust = appData.customers.find(c => c.id === inv.custId);
@@ -835,14 +878,14 @@
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // COPY PUBLIC CLIENT PORTAL LINK
+    // COPY CLIENT PORTAL LINK
     function copyClientPortalLink(invId) {
       const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${invId}`;
       navigator.clipboard.writeText(portalUrl);
       showToast('Client Portal Link Copied to Clipboard!');
     }
 
-    // EMAILJS AUTOMATED RECEIPT DISPATCH
+    // EMAILJS RECEIPT DISPATCH
     function sendAutomatedEmailReceipt(inv, cust) {
       if (!appData.emailjsKey || !appData.emailjsService || !appData.emailjsTemplate) return;
       if (!cust.email) return;
@@ -933,12 +976,13 @@
       appData.invoices.push(inv);
       persist();
 
-      // Publish read-only snapshot to public portal path
+      // Publish snapshot to public portal path with logo
       await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${inv.id}`), {
         ...inv,
         customer: cust,
         accentColor: appData.accentColor || '#0284c7',
-        upiId: appData.upiId || 'amutantech@okaxis'
+        upiId: appData.upiId || 'amutantech@okaxis',
+        logoData: appData.logoData || ''
       });
 
       closeModal('modal-invoice');
@@ -1021,13 +1065,18 @@
       showToast('Settings Synchronized');
     }
 
-    // SHARED INVOICE HTML TEMPLATE GENERATOR
-    function generateInvoiceHTML(inv, cust, accent, upi) {
+    // SHARED INVOICE HTML TEMPLATE WITH LOGO
+    function generateInvoiceHTML(inv, cust, accent, upi, logoData) {
+      const logoHTML = (logoData && logoData.trim() !== '') 
+        ? `<img src="${logoData}" alt="Logo" style="max-height: 52px; max-width: 140px; object-fit: contain; border-radius: 6px;" />`
+        : `<div style="width:44px; height:44px; background:${accent}; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:22px;">A</div>`;
+
       return `
         <div style="color:#0f172a; font-family:sans-serif;">
-          <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
-            <div style="display:flex; gap:12px; align-items:center;">
-              <div style="width:44px; height:44px; background:${accent}; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:22px;">A</div>
+          <!-- Invoice Header -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
+            <div style="display:flex; gap:14px; align-items:center;">
+              ${logoHTML}
               <div>
                 <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">AmutanTech</h1>
                 <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Cloud Enterprise Software Suite</p>
@@ -1040,6 +1089,7 @@
             </div>
           </div>
 
+          <!-- Client & Meta Info -->
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
             <div>
               <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed To:</strong>
@@ -1054,6 +1104,7 @@
             </div>
           </div>
 
+          <!-- Line Items -->
           <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
             <thead>
               <tr style="background:${accent}15; border-bottom:2px solid ${accent}; text-align:left;">
@@ -1077,6 +1128,7 @@
             </tbody>
           </table>
 
+          <!-- QR & Total -->
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:24px;">
             <div style="display:flex; gap:16px; align-items:center;">
               <div id="admin-qrcode" class="qr-target" style="width:72px; height:72px;"></div>
@@ -1128,7 +1180,13 @@
       const inv = appData.invoices.find(i => i.id === id);
       const cust = appData.customers.find(c => c.id === inv.custId);
       if (!inv) return;
-      document.getElementById('printable-invoice').innerHTML = generateInvoiceHTML(inv, cust, appData.accentColor || '#0284c7', appData.upiId || 'amutantech@okaxis');
+      document.getElementById('printable-invoice').innerHTML = generateInvoiceHTML(
+        inv, 
+        cust, 
+        appData.accentColor || '#0284c7', 
+        appData.upiId || 'amutantech@okaxis', 
+        appData.logoData || ''
+      );
       generateQRCode('admin-qrcode', appData.upiId || 'amutantech@okaxis', inv.total);
       openModal('modal-view-invoice');
     }
