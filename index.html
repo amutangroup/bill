@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AmutanTech - Cloud Business & Billing Suite</title>
+  <title>AmutanTech - Enterprise Billing, Stock & Khata ERP</title>
   
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -72,16 +72,17 @@
     .btn-cyan:hover { background: var(--cyan-hover); }
     .btn-emerald { background: var(--emerald); color: #fff; }
     .btn-rose { background: var(--rose); color: #fff; }
+    .btn-amber { background: var(--amber); color: #000; font-weight: 700; }
     .btn-dark { background: #1e293b; color: #fff; border: 1px solid var(--card-border); }
     .btn-dark:hover { background: #334155; }
     .btn-wa { background: #25d366; color: #fff; }
     .btn-wa:hover { background: #1ebd5a; }
 
-    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px; }
     .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; }
     .card-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .card-val { font-size: 28px; font-weight: 800; color: #fff; }
+    .card-val { font-size: 26px; font-weight: 800; color: #fff; }
     
     .table-container { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; overflow-x: auto; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
@@ -89,8 +90,9 @@
     td { padding: 14px 16px; border-bottom: 1px solid #1e293b; }
     tr:hover { background: #1e293b44; }
     
-    .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; user-select: none; }
+    .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
     .badge-paid { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+    .badge-partial { background: #1e3a8a; color: #60a5fa; border: 1px solid #2563eb; }
     .badge-pending { background: #78350f; color: #fbbf24; border: 1px solid #d97706; }
     
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; overflow-y: auto; }
@@ -103,10 +105,13 @@
     
     #toast { position: fixed; bottom: 20px; right: 20px; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: none; z-index: 200; }
     
+    .date-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--card-border); margin-bottom: 20px; }
+
     @media print {
       body * { visibility: hidden !important; }
-      #printable-invoice, #printable-invoice *, #portal-printable-invoice, #portal-printable-invoice * { visibility: visible !important; }
-      #printable-invoice, #portal-printable-invoice { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
+      #printable-invoice, #printable-invoice *, #portal-printable-invoice, #portal-printable-invoice *, #thermal-receipt, #thermal-receipt *, #voucher-printable, #voucher-printable * { visibility: visible !important; }
+      #printable-invoice, #portal-printable-invoice, #voucher-printable { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
+      #thermal-receipt { position: absolute; left: 0; top: 0; width: 80mm; padding: 5px; font-family: monospace; font-size: 12px; color: #000; background: #fff; }
       .no-print { display: none !important; }
     }
     .hidden { display: none !important; }
@@ -116,12 +121,12 @@
 
   <div id="toast">Notification</div>
 
-  <!-- AUTHENTICATION SCREEN (USERNAME & PASSWORD ALONE) -->
+  <!-- AUTHENTICATION SCREEN -->
   <div id="auth-screen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #060913;">
     <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 400px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;">
       <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff;">A</div>
       <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">AmutanTech Suite</h1>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Cloud Business & Billing Platform</p>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Commercial Billing, Stock & Khata ERP</p>
       
       <div style="display: flex; gap: 8px; margin-bottom: 20px;">
         <button id="auth-tab-login" onclick="toggleAuthMode('login')" class="btn btn-cyan" style="flex:1; justify-content: center;">Login</button>
@@ -140,13 +145,13 @@
         <div id="auth-role-group" class="form-group hidden">
           <label>Account Role</label>
           <select id="auth-role" class="form-control">
-            <option value="Admin">Admin (Full Access)</option>
-            <option value="Accountant">Accountant (Invoices & Expenses)</option>
+            <option value="Admin">Admin (Full Access & P&L)</option>
+            <option value="Biller">Biller (Bill Generator & Cash Collections)</option>
             <option value="Viewer">Viewer (Read Only)</option>
           </select>
         </div>
         <div id="auth-err" class="hidden" style="color: var(--rose); font-size: 12px; margin-bottom: 12px;"></div>
-        <button type="submit" id="auth-submit-btn" class="btn btn-cyan" style="width: 100%; padding: 12px; justify-content: center; font-size: 14px;">Sign In to Dashboard</button>
+        <button type="submit" id="auth-submit-btn" class="btn btn-cyan" style="width: 100%; padding: 12px; justify-content: center; font-size: 14px;">Sign In</button>
       </form>
     </div>
   </div>
@@ -171,17 +176,15 @@
         <nav>
           <button class="nav-btn active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">📊 Financial Hub</button>
           <button class="nav-btn" id="tab-btn-invoices" onclick="switchTab('invoices')">🧾 Bill Generator</button>
-          <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Customers</button>
+          <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Customer Khata</button>
+          <button class="nav-btn" id="tab-btn-stock" onclick="switchTab('stock')">📦 Inventory & Stock</button>
           <button class="nav-btn" id="tab-btn-expenses" onclick="switchTab('expenses')">💳 Expenses</button>
-          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings & Logo</button>
+          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings & Branding</button>
         </nav>
       </div>
 
       <div style="border-top: 1px solid var(--card-border); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
-        <label class="role-write" style="background: #131b2e; border: 1px dashed var(--card-border); padding: 8px; border-radius: 6px; font-size: 11px; text-align: center; cursor: pointer; color: var(--cyan); font-weight: 600;">
-          <span>📤 Upload Invoice Logo</span>
-          <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="hidden" />
-        </label>
+        <button onclick="exportInvoicesCSV()" class="btn btn-dark" style="justify-content: center;">📥 Export Bills CSV</button>
         <button onclick="handleSignOut()" class="btn btn-dark" style="justify-content: center;">🚪 Sign Out</button>
       </div>
     </aside>
@@ -189,38 +192,48 @@
     <!-- Main Content Area -->
     <main class="main-content">
 
+      <!-- Global Date Range Filter -->
+      <div class="date-filter-bar no-print">
+        <span style="font-size: 12px; font-weight: 700; color: var(--cyan);">📅 Filter Date Range:</span>
+        <button class="btn btn-dark btn-sm" onclick="setDateFilter('today')">Today</button>
+        <button class="btn btn-dark btn-sm" onclick="setDateFilter('this_month')">This Month</button>
+        <button class="btn btn-dark btn-sm" onclick="setDateFilter('all')">All Time</button>
+        <input type="date" id="filter-from-date" class="form-control" style="width: 140px; padding: 4px 8px; font-size: 12px;" onchange="applyCustomDateFilter()">
+        <span style="font-size: 12px; color: var(--text-muted);">to</span>
+        <input type="date" id="filter-to-date" class="form-control" style="width: 140px; padding: 4px 8px; font-size: 12px;" onchange="applyCustomDateFilter()">
+      </div>
+
       <!-- TAB 1: DASHBOARD -->
       <section id="tab-dashboard">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h1 style="font-size: 24px; font-weight: 800;">Financial Overview</h1>
-            <p style="font-size: 13px; color: var(--text-muted);">Real-time Cloud Cash Flow & Revenue Metrics</p>
+            <h1 style="font-size: 24px; font-weight: 800;">Commercial Hub</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Real-time Cash Collection, Outstanding Khata & Stock Flow</p>
           </div>
           <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Bill</button>
         </div>
 
         <div class="grid-4">
           <div class="card">
-            <div class="card-title">Total Revenue <span>📈</span></div>
+            <div class="card-title">Gross Invoiced Revenue <span>📈</span></div>
             <div class="card-val" id="stat-rev">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Total Expenses <span>📉</span></div>
-            <div class="card-val" id="stat-exp">₹0</div>
+            <div class="card-title">Actual Cash Collected <span>💵</span></div>
+            <div class="card-val" id="stat-paid" style="color: var(--emerald);">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Net Profit <span>💰</span></div>
-            <div class="card-val" id="stat-prof" style="color: var(--emerald);">₹0</div>
-            <div id="stat-margin" style="font-size: 11px; color: var(--emerald); font-weight: 600; margin-top: 4px;">0% Margin</div>
+            <div class="card-title">Pending Khata Receivables <span>⏳</span></div>
+            <div class="card-val" id="stat-due" style="color: var(--amber);">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Customers <span>👥</span></div>
-            <div class="card-val" id="stat-cust">0</div>
+            <div class="card-title">Operating Expenses <span>📉</span></div>
+            <div class="card-val" id="stat-exp" style="color: var(--rose);">₹0</div>
           </div>
         </div>
 
         <div class="card" style="margin-bottom: 24px;">
-          <div class="card-title">Performance Metrics (Gross Revenue vs Operating Expenses)</div>
+          <div class="card-title">Financial Flow (Gross Billed vs Collected Cash vs Expenses)</div>
           <div style="height: 240px; position: relative;"><canvas id="financeChart"></canvas></div>
         </div>
 
@@ -230,29 +243,33 @@
             <div id="dash-recent-invoices" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
           <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Recent Expenses</h3>
-            <div id="dash-recent-expenses" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Stock Alert (Low Inventory)</h3>
+            <div id="dash-stock-alerts" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
         </div>
       </section>
 
       <!-- TAB 2: INVOICES -->
       <section id="tab-invoices" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Billing & Client Invoices</h1>
-          <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Invoice</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <h1 style="font-size: 22px; font-weight: 800;">Billing & Client Ledger</h1>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="exportInvoicesCSV()" class="btn btn-dark">📊 Export Excel/CSV</button>
+            <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Bill</button>
+          </div>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Invoice #</th>
-                <th>Client</th>
+                <th>Bill #</th>
+                <th>Client / Party</th>
                 <th>Issued</th>
-                <th>Due</th>
-                <th>Total</th>
+                <th>Bill Total</th>
+                <th>Paid Now</th>
+                <th>Khata Balance</th>
                 <th>Status</th>
-                <th style="text-align: right;">Client Actions</th>
+                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="invoices-tbody"></tbody>
@@ -260,22 +277,25 @@
         </div>
       </section>
 
-      <!-- TAB 3: CUSTOMERS -->
+      <!-- TAB 3: CUSTOMER KHATA -->
       <section id="tab-customers" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Customer Directory</h1>
+          <div>
+            <h1 style="font-size: 22px; font-weight: 800;">Customer Khata Ledger</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Manage party dues, record settlements, and generate receipts</p>
+          </div>
           <button onclick="openCustomerModal()" class="btn btn-emerald role-write">👥 Add Customer</button>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Company / Client</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Address</th>
+                <th>Client / Mandi Party</th>
+                <th>Contact</th>
                 <th>Total Billed</th>
-                <th style="text-align: right;">Action</th>
+                <th>Total Paid</th>
+                <th>Unpaid Khata Balance</th>
+                <th style="text-align: right;">Khata Action</th>
               </tr>
             </thead>
             <tbody id="customers-tbody"></tbody>
@@ -283,17 +303,43 @@
         </div>
       </section>
 
-      <!-- TAB 4: EXPENSES -->
+      <!-- TAB 4: INVENTORY & STOCK -->
+      <section id="tab-stock" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <h1 style="font-size: 22px; font-weight: 800;">Inventory & Stock Master</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Auto-deducted on invoice generation with restock logs</p>
+          </div>
+          <button onclick="openItemModal()" class="btn btn-cyan role-write">📦 Add New Product</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item / Description</th>
+                <th>Default Rate</th>
+                <th>Stock on Hand</th>
+                <th>Low Stock Limit</th>
+                <th>Status</th>
+                <th style="text-align: right;">Stock Action</th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: EXPENSES -->
       <section id="tab-expenses" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Expense Recorder</h1>
+          <h1 style="font-size: 22px; font-weight: 800;">Operating Expenses</h1>
           <button onclick="openExpenseModal()" class="btn btn-rose role-write">💳 Add Expense</button>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Title</th>
+                <th>Title / Description</th>
                 <th>Category</th>
                 <th>Date</th>
                 <th>Tagged Customer</th>
@@ -306,23 +352,27 @@
         </div>
       </section>
 
-      <!-- TAB 5: SETTINGS & LOGO -->
+      <!-- TAB 6: SETTINGS -->
       <section id="tab-settings" class="hidden">
         <div style="margin-bottom: 20px;">
           <h1 style="font-size: 22px; font-weight: 800;">Enterprise Configuration</h1>
-          <p style="font-size: 13px; color: var(--text-muted);">Logo Branding, EmailJS Dispatcher & UPI Defaults</p>
+          <p style="font-size: 13px; color: var(--text-muted);">Branding, Print Presets, and Payment Details</p>
         </div>
 
         <div class="grid-2">
           <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Company Logo & Branding</h3>
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Company Details & Branding</h3>
             <div class="form-group">
-              <label>Upload Brand Logo (PNG/JPG)</label>
+              <label>Business Name</label>
+              <input type="text" id="cfg-biz-name" class="form-control" placeholder="AmutanTech / Trader Name" />
+            </div>
+            <div class="form-group">
+              <label>Brand Logo (Max 500KB)</label>
               <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="form-control" />
             </div>
             <div class="form-group">
-              <label>Default UPI ID (For Invoices & QR)</label>
-              <input type="text" id="cfg-upi-id" class="form-control" placeholder="amutantech@okaxis" />
+              <label>UPI ID (For QR Payment Collection)</label>
+              <input type="text" id="cfg-upi-id" class="form-control" placeholder="username@upi" />
             </div>
             <div class="form-group">
               <label>Invoice Theme Color</label>
@@ -332,7 +382,7 @@
           </div>
 
           <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">EmailJS Dispatcher Settings</h3>
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">EmailJS Dispatch Settings</h3>
             <div class="form-group">
               <label>EmailJS Public Key</label>
               <input type="text" id="cfg-emailjs-key" class="form-control" placeholder="public_key" />
@@ -357,24 +407,27 @@
   <div id="portal-screen" class="hidden" style="min-height: 100vh; background: #060913; padding: 24px; display: flex; justify-content: center;">
     <div style="width: 100%; max-width: 800px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <span style="font-size: 14px; color: var(--cyan); font-weight: 700;">⚡ AmutanTech Secure Client Portal</span>
+        <span style="font-size: 14px; color: var(--cyan); font-weight: 700;">⚡ Instant Invoice Receipt</span>
         <button onclick="window.print()" class="btn btn-cyan">🖨️ Download PDF</button>
       </div>
       <div id="portal-printable-invoice" style="background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);"></div>
     </div>
   </div>
 
+  <!-- THERMAL RECEIPT CONTAINER -->
+  <div id="thermal-receipt" class="hidden"></div>
+
   <!-- MODAL: INVOICE BUILDER -->
   <div id="modal-invoice" class="modal-overlay">
-    <div class="modal-box" style="max-width: 700px;">
+    <div class="modal-box" style="max-width: 720px;">
       <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Generate Bill</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Generate Direct Bill</h3>
         <button onclick="closeModal('modal-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
       </div>
       <form onsubmit="saveInvoice(event)">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label>Customer</label>
+            <label>Customer / Party</label>
             <select id="inv-cust-id" required class="form-control"></select>
           </div>
           <div class="form-group">
@@ -391,36 +444,162 @@
           </div>
         </div>
 
+        <!-- Quick Item Loader -->
+        <div class="form-group" style="background:#060913; padding:10px; border-radius:6px; border:1px solid var(--card-border);">
+          <label style="color:var(--cyan);">⚡ Fast Add from Inventory (Stock Auto-Linked)</label>
+          <div style="display:flex; gap:8px;">
+            <select id="quick-item-select" class="form-control" style="flex:1;">
+              <option value="">-- Select Catalog Product --</option>
+            </select>
+            <button type="button" onclick="addSelectedCatalogItem()" class="btn btn-cyan">+ Add Line</button>
+          </div>
+        </div>
+
         <div style="margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Billable Items</label>
-            <button type="button" onclick="addInvoiceItemRow()" class="btn btn-cyan" style="padding: 4px 10px; font-size: 11px;">➕ Add Line</button>
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Billable Items (Qty × Rate)</label>
+            <button type="button" onclick="addInvoiceItemRow()" class="btn btn-cyan" style="padding: 4px 10px; font-size: 11px;">➕ Custom Item</button>
           </div>
           <div id="inv-items-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <div style="background: #060913; border: 1px solid var(--card-border); padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <span style="font-size: 12px; color: var(--text-muted);">Grand Total:</span>
-          <span id="inv-total-txt" style="font-size: 20px; font-weight: 800; color: var(--emerald);">₹0</span>
+        <!-- Discount & Round-off Calculation Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label>Discount / Concession (₹)</label>
+            <input type="number" step="any" id="inv-discount" value="0" min="0" oninput="calcInvTotal()" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Round-Off Adjustment (₹)</label>
+            <input type="number" step="any" id="inv-roundoff" value="0" oninput="calcInvTotal()" class="form-control" placeholder="+/- 0.50" />
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label>Notes</label>
-            <input type="text" id="inv-note" value="Thank you for your business!" class="form-control" />
+        <div style="background: #060913; border: 1px solid var(--card-border); padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted); display: block;">Items Total: <span id="inv-subtotal-txt">₹0</span> | Less Discount: <span id="inv-discount-txt">₹0</span></span>
+            <span style="font-size: 13px; font-weight: 700; color: #fff;">Final Bill Total:</span>
           </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select id="inv-status" class="form-control">
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-            </select>
+          <span id="inv-total-txt" style="font-size: 22px; font-weight: 800; color: var(--emerald);">₹0</span>
+        </div>
+
+        <!-- Partial Payment / Khata Section -->
+        <div style="background: #1e293b44; border: 1px dashed var(--card-border); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+          <label style="font-size: 11px; text-transform: uppercase; color: var(--amber); font-weight: 700; display: block; margin-bottom: 8px;">Payment Split & Khata Logging</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Paid Amount Now (₹)</label>
+              <input type="number" step="any" id="inv-paid-amt" required oninput="calcKhataDue()" class="form-control" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Payment Mode</label>
+              <select id="inv-paymode" class="form-control">
+                <option value="Cash">Cash</option>
+                <option value="UPI / Online">UPI / Online</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Khata (Credit)">Khata (Credit)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Balance to Khata (₹)</label>
+              <input type="number" id="inv-due-amt" readonly class="form-control" style="font-weight:800; color:var(--amber);" />
+            </div>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes / Terms</label>
+          <input type="text" id="inv-note" value="Thank you for your business!" class="form-control" />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
           <button type="button" onclick="closeModal('modal-invoice')" class="btn btn-dark">Cancel</button>
-          <button type="submit" class="btn btn-cyan">Save & Sync</button>
+          <button type="submit" class="btn btn-cyan">Save Bill & Deduct Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: KHATA SETTLEMENT -->
+  <div id="modal-settlement" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;">Record Khata Cash Receipt</h3>
+        <button onclick="closeModal('modal-settlement')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <form onsubmit="saveKhataSettlement(event)">
+        <input type="hidden" id="settle-cust-id" />
+        <div style="background: #060913; padding: 12px; border-radius: 8px; margin-bottom: 14px;">
+          <div style="font-size: 12px; color: var(--text-muted);">Client Name: <strong id="settle-cust-name" style="color: #fff;">-</strong></div>
+          <div style="font-size: 14px; color: var(--amber); font-weight: 800; margin-top: 4px;">Current Outstanding: <span id="settle-current-due">₹0</span></div>
+        </div>
+
+        <div class="form-group">
+          <label>Settlement Date</label>
+          <input type="date" id="settle-date" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Amount Received (₹)</label>
+          <input type="number" step="any" id="settle-amount" required min="1" class="form-control" placeholder="Enter collected amount" />
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="settle-paymode" class="form-control">
+            <option value="Cash">Cash</option>
+            <option value="UPI / Online">UPI / Online</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes / Voucher Reference</label>
+          <input type="text" id="settle-note" placeholder="e.g. Part payment on bill AT-2026-001" class="form-control" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+          <button type="button" onclick="closeModal('modal-settlement')" class="btn btn-dark">Cancel</button>
+          <button type="submit" class="btn btn-emerald">Save & Print Receipt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / RESTOCK PRODUCT -->
+  <div id="modal-item" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 16px; font-weight: 700;" id="item-modal-title">Product / Stock Management</h3>
+        <button onclick="closeModal('modal-item')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+      </div>
+      <form onsubmit="saveCatalogItem(event)">
+        <input type="hidden" id="item-edit-id" />
+        <div class="form-group">
+          <label>Product / Description Name</label>
+          <input type="text" id="item-name" required class="form-control" placeholder="e.g. Grade A Coconuts / 50kg Copra Bags" />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Default Sale Rate (₹)</label>
+            <input type="number" step="any" id="item-rate" required class="form-control" placeholder="28.50" />
+          </div>
+          <div class="form-group">
+            <label>Unit of Measure</label>
+            <input type="text" id="item-unit" class="form-control" placeholder="Nuts / Bags / Kg" value="Units" />
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Stock on Hand (Quantity)</label>
+            <input type="number" step="any" id="item-stock" required class="form-control" placeholder="5000" />
+          </div>
+          <div class="form-group">
+            <label>Low Stock Warning Limit</label>
+            <input type="number" step="any" id="item-min-stock" class="form-control" value="100" />
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+          <button type="button" onclick="closeModal('modal-item')" class="btn btn-dark">Cancel</button>
+          <button type="submit" class="btn btn-cyan">Save to Inventory</button>
         </div>
       </form>
     </div>
@@ -430,25 +609,25 @@
   <div id="modal-customer" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Add Client Record</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Add Client / Mandi Account</h3>
         <button onclick="closeModal('modal-customer')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
       </div>
       <form onsubmit="saveCustomer(event)">
         <div class="form-group">
-          <label>Company / Client Name</label>
-          <input type="text" id="cust-name" required class="form-control" placeholder="Apex Corp" />
+          <label>Company / Party Name</label>
+          <input type="text" id="cust-name" required class="form-control" placeholder="Namakkal Mandi Traders" />
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <label>Email (For Automated Receipts)</label>
           <input type="email" id="cust-email" class="form-control" placeholder="client@example.com" />
         </div>
         <div class="form-group">
-          <label>Phone (Include Country Code)</label>
+          <label>Phone / WhatsApp (Include Country Code)</label>
           <input type="text" id="cust-phone" class="form-control" placeholder="919876543210" />
         </div>
         <div class="form-group">
-          <label>Address</label>
-          <input type="text" id="cust-address" class="form-control" placeholder="Bangalore, India" />
+          <label>Address / Mandi Location</label>
+          <input type="text" id="cust-address" class="form-control" placeholder="Mohanur Road, Namakkal" />
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
           <button type="button" onclick="closeModal('modal-customer')" class="btn btn-dark">Cancel</button>
@@ -468,21 +647,21 @@
       <form onsubmit="saveExpense(event)">
         <div class="form-group">
           <label>Title / Description</label>
-          <input type="text" id="exp-title" required class="form-control" placeholder="AWS Servers" />
+          <input type="text" id="exp-title" required class="form-control" placeholder="Diesel / Vehicle Service / Batta" />
         </div>
         <div class="form-group">
           <label>Category</label>
           <select id="exp-cat" class="form-control">
-            <option>Hosting & Cloud</option>
-            <option>Domain & SSL</option>
-            <option>API & Software</option>
-            <option>Freelancer / Subcontract</option>
-            <option>Other</option>
+            <option>Fuel & Diesel</option>
+            <option>Labor & Driver Batta</option>
+            <option>Vehicle Maintenance</option>
+            <option>Rent & Electricity</option>
+            <option>General Overhead</option>
           </select>
         </div>
         <div class="form-group">
           <label>Amount (₹)</label>
-          <input type="number" id="exp-amt" min="0" required class="form-control" placeholder="2500" />
+          <input type="number" id="exp-amt" min="0" step="any" required class="form-control" placeholder="2500" />
         </div>
         <div class="form-group">
           <label>Date</label>
@@ -500,17 +679,32 @@
     </div>
   </div>
 
-  <!-- MODAL: ADMIN INVOICE PREVIEW -->
+  <!-- MODAL: INVOICE PREVIEW -->
   <div id="modal-view-invoice" class="modal-overlay">
     <div class="modal-box" style="max-width: 800px; background: #0f172a;">
       <div class="modal-header no-print">
-        <h3 style="font-size: 16px; font-weight: 700;">Invoice Preview</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Print Options</h3>
         <div style="display: flex; gap: 8px;">
-          <button onclick="window.print()" class="btn btn-cyan">🖨️ Print / Save PDF</button>
+          <button id="btn-print-a4" class="btn btn-cyan">🖨️ A4 Print</button>
+          <button id="btn-print-thermal" class="btn btn-amber">🧾 Thermal Slip</button>
           <button onclick="closeModal('modal-view-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
         </div>
       </div>
       <div id="printable-invoice" style="background: #fff; color: #0f172a; padding: 32px; border-radius: 8px;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PAYMENT VOUCHER PREVIEW -->
+  <div id="modal-view-voucher" class="modal-overlay">
+    <div class="modal-box" style="max-width: 600px; background: #0f172a;">
+      <div class="modal-header no-print">
+        <h3 style="font-size: 16px; font-weight: 700;">Payment Voucher</h3>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="window.print()" class="btn btn-emerald">🖨️ Print Voucher</button>
+          <button onclick="closeModal('modal-view-voucher')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
+        </div>
+      </div>
+      <div id="voucher-printable" style="background: #fff; color: #0f172a; padding: 24px; border-radius: 8px;"></div>
     </div>
   </div>
 
@@ -519,28 +713,53 @@
     let currentUser = null;
     let userRole = 'Admin';
     let myChart = null;
+    let activeDateFilter = 'all';
 
-    // Local Users Registry
     let registeredUsers = JSON.parse(localStorage.getItem('amutan_users')) || {
       'admin': { password: 'amutan123', role: 'Admin' }
     };
 
     const DEFAULT_DATA = {
+      bizName: 'Kamadhenu Commercial Traders',
       logoData: '',
       accentColor: '#0284c7',
       upiId: 'amutantech@okaxis',
       emailjsKey: '',
       emailjsService: '',
       emailjsTemplate: '',
+      items: [
+        { id: 'it1', name: 'Grade A Coconuts (தேங்காய்)', rate: 28.5, unit: 'Nuts', stock: 12000, minStock: 1000 },
+        { id: 'it2', name: 'Uli Kai (உழி காய்)', rate: 22.0, unit: 'Nuts', stock: 3500, minStock: 500 },
+        { id: 'it3', name: 'Copra 50kg Gunny Bag', rate: 4200, unit: 'Bags', stock: 45, minStock: 10 }
+      ],
       customers: [
-        { id: 'c1', name: 'Apex Solutions Inc.', email: 'apex@example.com', phone: '+91 98401 23456', address: 'Bangalore, India' },
-        { id: 'c2', name: 'Veloce Logistics Ltd', email: 'veloce@example.com', phone: '+91 98840 98765', address: 'Chennai, India' }
+        { id: 'c1', name: 'Namakkal Wholesale Mandi', email: 'mandi@example.com', phone: '+91 98427 12345', address: 'Mohanur Road, Namakkal' },
+        { id: 'c2', name: 'Selvam Oil Mill', email: 'selvam@example.com', phone: '+91 97891 45678', address: 'Paramathi Velur' }
       ],
       invoices: [
-        { id: 'inv1', num: 'AT-2026-001', custId: 'c1', date: '2026-08-16', due: '2026-08-30', status: 'Paid', note: 'Standard software deliverables included', items: [{ desc: 'Custom Software Architecture', qty: 1, rate: 45000, amt: 45000 }], total: 45000 }
+        { 
+          id: 'inv1', 
+          num: 'BILL-2026-001', 
+          custId: 'c1', 
+          date: '2026-08-20', 
+          due: '2026-08-27', 
+          payMode: 'Cash', 
+          status: 'Partial', 
+          note: 'Direct farm pricing', 
+          items: [{ desc: 'Grade A Coconuts (தேங்காய்)', qty: 2000, rate: 28.5, amt: 57000, itemId: 'it1' }], 
+          discount: 0,
+          roundoff: 0,
+          subtotal: 57000,
+          total: 57000,
+          paidAmt: 30000,
+          dueAmt: 27000
+        }
+      ],
+      settlements: [
+        { id: 'stl1', date: '2026-08-21', custId: 'c1', amount: 10000, payMode: 'UPI / Online', note: 'Part clearance of BILL-2026-001' }
       ],
       expenses: [
-        { id: 'e1', title: 'AWS Cloud Server Hosting', cat: 'Hosting & Cloud', amt: 3500, date: '2026-08-05', custId: 'c1' }
+        { id: 'e1', title: 'Vehicle Diesel - Bolero Maxi', cat: 'Fuel & Diesel', amt: 3340, date: '2026-08-20', custId: 'c1' }
       ]
     };
 
@@ -554,10 +773,9 @@
     }
 
     function formatINR(val) {
-      return '₹' + Number(val || 0).toLocaleString('en-IN');
+      return '₹' + Number(val || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
     }
 
-    // CHECK CLIENT PORTAL (PUBLIC VIEW via URL Hash)
     window.addEventListener('load', () => {
       const hash = window.location.hash;
       if (hash.startsWith('#/pay/')) {
@@ -579,13 +797,9 @@
           const inv = snapshot.val();
           if (inv) {
             document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
-              inv, 
-              inv.customer, 
-              inv.accentColor || '#0284c7', 
-              inv.upiId || 'amutantech@okaxis',
-              inv.logoData || ''
+              inv, inv.customer, inv.accentColor || '#0284c7', inv.upiId || 'amutantech@okaxis', inv.logoData || '', inv.bizName || 'Commercial Suite'
             );
-            generateQRCode('portal-qrcode', inv.upiId || 'amutantech@okaxis', inv.total);
+            generateQRCode('portal-qrcode-target', inv.upiId || 'amutantech@okaxis', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
           } else {
             fallbackLocalPortal(invId);
           }
@@ -600,20 +814,19 @@
       if (inv) {
         const cust = (appData.customers || []).find(c => c.id === inv.custId);
         document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
-          inv, cust, appData.accentColor, appData.upiId, appData.logoData
+          inv, cust, appData.accentColor, appData.upiId, appData.logoData, appData.bizName
         );
-        generateQRCode('portal-qrcode', appData.upiId, inv.total);
+        generateQRCode('portal-qrcode-target', appData.upiId, inv.dueAmt > 0 ? inv.dueAmt : inv.total);
       } else {
         document.getElementById('portal-printable-invoice').innerHTML = `<h2 style="color:#f43f5e; text-align:center;">Invoice Not Found or Expired.</h2>`;
       }
     }
 
-    // USERNAME & PASSWORD AUTH
     function toggleAuthMode(m) {
       authMode = m;
       document.getElementById('auth-tab-login').className = m === 'login' ? 'btn btn-cyan' : 'btn btn-dark';
       document.getElementById('auth-tab-signup').className = m === 'signup' ? 'btn btn-cyan' : 'btn btn-dark';
-      document.getElementById('auth-submit-btn').innerText = m === 'login' ? 'Sign In to Dashboard' : 'Register Account';
+      document.getElementById('auth-submit-btn').innerText = m === 'login' ? 'Sign In' : 'Register Account';
       document.getElementById('auth-role-group').classList.toggle('hidden', m === 'login');
       document.getElementById('auth-err').classList.add('hidden');
     }
@@ -683,11 +896,10 @@
       });
     }
 
-    // REALTIME DATABASE SYNC
     function persist() {
       localStorage.setItem('amutan_data', JSON.stringify(appData));
       if (window.fbDb && window.fbRef && window.fbSet && currentUser) {
-        window.fbSet(window.fbRef(window.fbDb, `org_data/${currentUser}`), appData).catch(e => console.log('Sync status:', e.message));
+        window.fbSet(window.fbRef(window.fbDb, `org_data/${currentUser}`), appData).catch(e => console.log('Sync error:', e.message));
       }
       render();
     }
@@ -710,7 +922,45 @@
       if (currentUser) syncCloud();
     });
 
-    // LOGO UPLOAD
+    function setDateFilter(mode) {
+      activeDateFilter = mode;
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (mode === 'today') {
+        document.getElementById('filter-from-date').value = todayStr;
+        document.getElementById('filter-to-date').value = todayStr;
+      } else if (mode === 'this_month') {
+        const d = new Date();
+        const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('filter-from-date').value = firstDay;
+        document.getElementById('filter-to-date').value = todayStr;
+      } else {
+        document.getElementById('filter-from-date').value = '';
+        document.getElementById('filter-to-date').value = '';
+      }
+      render();
+    }
+
+    function applyCustomDateFilter() {
+      activeDateFilter = 'custom';
+      render();
+    }
+
+    function getFilteredData() {
+      const from = document.getElementById('filter-from-date').value;
+      const to = document.getElementById('filter-to-date').value;
+
+      let invoices = appData.invoices || [];
+      let expenses = appData.expenses || [];
+      let settlements = appData.settlements || [];
+
+      if (from && to) {
+        invoices = invoices.filter(i => i.date >= from && i.date <= to);
+        expenses = expenses.filter(e => e.date >= from && e.date <= to);
+        settlements = settlements.filter(s => s.date >= from && s.date <= to);
+      }
+      return { invoices, expenses, settlements };
+    }
+
     function handleLogoUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -729,11 +979,12 @@
       reader.readAsDataURL(file);
     }
 
-    // TABS
     function switchTab(t) {
-      ['dashboard', 'invoices', 'customers', 'expenses', 'settings'].forEach(tab => {
-        document.getElementById('tab-' + tab).classList.add('hidden');
-        document.getElementById('tab-btn-' + tab).classList.remove('active');
+      ['dashboard', 'invoices', 'customers', 'stock', 'expenses', 'settings'].forEach(tab => {
+        const el = document.getElementById('tab-' + tab);
+        const btn = document.getElementById('tab-btn-' + tab);
+        if (el) el.classList.add('hidden');
+        if (btn) btn.classList.remove('active');
       });
       document.getElementById('tab-' + t).classList.remove('hidden');
       document.getElementById('tab-btn-' + t).classList.add('active');
@@ -743,7 +994,6 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // RENDER
     function render() {
       const img = document.getElementById('sidebar-logo-img');
       const txt = document.getElementById('sidebar-logo-txt');
@@ -756,39 +1006,59 @@
         txt.classList.remove('hidden');
       }
 
+      document.getElementById('cfg-biz-name').value = appData.bizName || 'Kamadhenu Commercial Traders';
       document.getElementById('cfg-emailjs-key').value = appData.emailjsKey || '';
       document.getElementById('cfg-emailjs-service').value = appData.emailjsService || '';
       document.getElementById('cfg-emailjs-template').value = appData.emailjsTemplate || '';
       document.getElementById('cfg-upi-id').value = appData.upiId || 'amutantech@okaxis';
       document.getElementById('cfg-accent').value = appData.accentColor || '#0284c7';
 
-      const rev = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
-      const exp = (appData.expenses || []).reduce((a, b) => a + Number(b.amt || 0), 0);
-      const prof = rev - exp;
-      const margin = rev > 0 ? ((prof / rev) * 100).toFixed(1) : 0;
+      const { invoices, expenses, settlements } = getFilteredData();
 
-      document.getElementById('stat-rev').innerText = formatINR(rev);
-      document.getElementById('stat-exp').innerText = formatINR(exp);
-      document.getElementById('stat-prof').innerText = formatINR(prof);
-      document.getElementById('stat-margin').innerText = margin + '% Net Margin';
-      document.getElementById('stat-cust').innerText = (appData.customers || []).length;
+      const totalBilled = invoices.reduce((a, b) => a + Number(b.total || 0), 0);
+      const invoiceCashPaid = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
+      const settlementCashPaid = settlements.reduce((a, b) => a + Number(b.amount || 0), 0);
+      const totalCashCollected = invoiceCashPaid + settlementCashPaid;
 
-      document.getElementById('dash-recent-invoices').innerHTML = (appData.invoices || []).slice(-4).reverse().map(i => `
+      // Calculate All-Time Khata Receivables
+      const allBilled = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
+      const allInvPaid = (appData.invoices || []).reduce((a, b) => a + Number(b.paidAmt || 0), 0);
+      const allSettlePaid = (appData.settlements || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+      const totalOutstandingKhata = Math.max(0, allBilled - (allInvPaid + allSettlePaid));
+
+      const totalExpenses = expenses.reduce((a, b) => a + Number(b.amt || 0), 0);
+
+      document.getElementById('stat-rev').innerText = formatINR(totalBilled);
+      document.getElementById('stat-paid').innerText = formatINR(totalCashCollected);
+      document.getElementById('stat-due').innerText = formatINR(totalOutstandingKhata);
+      document.getElementById('stat-exp').innerText = formatINR(totalExpenses);
+
+      // Dashboard Recent Bills
+      document.getElementById('dash-recent-invoices').innerHTML = invoices.slice(-4).reverse().map(i => {
+        const cust = (appData.customers || []).find(c => c.id === i.custId) || { name: 'Client' };
+        return `
+          <div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid #1e293b;">
+            <span><strong>${i.num}</strong> (${cust.name})</span>
+            <div>
+              <span style="color:var(--emerald); font-weight:700;">${formatINR(i.total)}</span>
+              ${i.dueAmt > 0 ? `<small style="color:var(--amber); display:block; text-align:right;">Due: ${formatINR(i.dueAmt)}</small>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') || '<div style="font-size:12px; color:var(--text-muted);">No records for selected period.</div>';
+
+      // Dashboard Stock Alerts
+      const lowStockItems = (appData.items || []).filter(it => it.stock <= (it.minStock || 100));
+      document.getElementById('dash-stock-alerts').innerHTML = lowStockItems.map(it => `
         <div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid #1e293b;">
-          <span><strong>${i.num}</strong> (${(appData.customers.find(c => c.id === i.custId) || {}).name || 'Client'})</span>
-          <span style="color:var(--emerald); font-weight:700;">${formatINR(i.total)}</span>
+          <span style="color:var(--rose); font-weight:700;">⚠️ ${it.name}</span>
+          <span style="color:var(--rose); font-weight:800;">${it.stock} ${it.unit} Left</span>
         </div>
-      `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No records found.</div>';
-
-      document.getElementById('dash-recent-expenses').innerHTML = (appData.expenses || []).slice(-4).reverse().map(e => `
-        <div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid #1e293b;">
-          <span>${e.title}</span>
-          <span style="color:var(--rose); font-weight:700;">${formatINR(e.amt)}</span>
-        </div>
-      `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No records found.</div>';
+      `).join('') || '<div style="font-size:12px; color:var(--emerald); font-weight:600;">✅ All stock levels are sufficient.</div>';
 
       renderInvoicesTable();
       renderCustomersTable();
+      renderStockTable();
       renderExpensesTable();
       populateDropdowns();
       renderChart();
@@ -797,17 +1067,20 @@
     function renderChart() {
       const ctx = document.getElementById('financeChart');
       if (!ctx) return;
-      const rev = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
-      const exp = (appData.expenses || []).reduce((a, b) => a + Number(b.amt || 0), 0);
+      const { invoices, expenses, settlements } = getFilteredData();
+      
+      const billed = invoices.reduce((a, b) => a + Number(b.total || 0), 0);
+      const paid = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0) + settlements.reduce((a, b) => a + Number(b.amount || 0), 0);
+      const exp = expenses.reduce((a, b) => a + Number(b.amt || 0), 0);
 
       if (myChart) myChart.destroy();
       myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Gross Revenue', 'Operating Expenses', 'Net Profit'],
+          labels: ['Gross Invoiced', 'Collected Cash', 'Operating Expenses'],
           datasets: [{
-            data: [rev, exp, Math.max(0, rev - exp)],
-            backgroundColor: ['#06b6d4', '#f43f5e', '#10b981'],
+            data: [billed, paid, exp],
+            backgroundColor: ['#06b6d4', '#10b981', '#f43f5e'],
             borderRadius: 6
           }]
         },
@@ -824,48 +1097,80 @@
     }
 
     function renderInvoicesTable() {
-      document.getElementById('invoices-tbody').innerHTML = (appData.invoices || []).map(i => {
+      const { invoices } = getFilteredData();
+      document.getElementById('invoices-tbody').innerHTML = invoices.map(i => {
         const c = appData.customers.find(cust => cust.id === i.custId) || { name: '—', phone: '' };
-        const isPaid = i.status === 'Paid';
+        let badgeClass = 'badge-paid';
+        if (i.status === 'Partial') badgeClass = 'badge-partial';
+        if (i.status === 'Pending') badgeClass = 'badge-pending';
+
         return `
           <tr>
             <td><strong>${i.num}</strong></td>
             <td>${c.name}</td>
             <td>${i.date}</td>
-            <td>${i.due}</td>
-            <td><strong>${formatINR(i.total)}</strong></td>
-            <td><span onclick="toggleInvStatus('${i.id}')" class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${i.status} ↻</span></td>
+            <td style="font-weight:700;">${formatINR(i.total)}</td>
+            <td style="color:var(--emerald); font-weight:700;">${formatINR(i.paidAmt || 0)}</td>
+            <td style="color:${i.dueAmt > 0 ? 'var(--amber)' : 'var(--emerald)'}; font-weight:800;">${formatINR(i.dueAmt || 0)}</td>
+            <td><span class="badge ${badgeClass}">${i.status}</span></td>
             <td style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
-              <button onclick="sendWhatsAppReminder('${i.id}')" class="btn btn-wa" title="WhatsApp Reminder">💬 WhatsApp</button>
+              <button onclick="sendWhatsAppReminder('${i.id}')" class="btn btn-wa" title="WhatsApp Reminder">💬 WA</button>
               <button onclick="copyClientPortalLink('${i.id}')" class="btn btn-dark" title="Copy Public URL">🔗 Link</button>
               <button onclick="previewInvoice('${i.id}')" class="btn btn-cyan">View</button>
               ${userRole !== 'Viewer' ? `<button onclick="deleteInv('${i.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:4px;">🗑</button>` : ''}
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') || '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No invoices found for this range.</td></tr>';
     }
 
     function renderCustomersTable() {
       document.getElementById('customers-tbody').innerHTML = (appData.customers || []).map(c => {
-        const total = (appData.invoices || []).filter(i => i.custId === c.id).reduce((a, b) => a + Number(b.total || 0), 0);
+        const custInvoices = (appData.invoices || []).filter(i => i.custId === c.id);
+        const totalBilled = custInvoices.reduce((a, b) => a + Number(b.total || 0), 0);
+        const invPaid = custInvoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
+        const settlePaid = (appData.settlements || []).filter(s => s.custId === c.id).reduce((a, b) => a + Number(b.amount || 0), 0);
+        const totalPaid = invPaid + settlePaid;
+        const balanceDue = Math.max(0, totalBilled - totalPaid);
+
         return `
           <tr>
-            <td><strong>${c.name}</strong></td>
-            <td>${c.email || '—'}</td>
-            <td>${c.phone || '—'}</td>
-            <td>${c.address || '—'}</td>
-            <td style="color:var(--emerald); font-weight:700;">${formatINR(total)}</td>
+            <td><strong>${c.name}</strong><br><small style="color:var(--text-muted);">${c.address || '—'}</small></td>
+            <td>${c.phone || '—'}<br><small style="color:var(--text-muted);">${c.email || '—'}</small></td>
+            <td style="font-weight:700;">${formatINR(totalBilled)}</td>
+            <td style="color:var(--emerald); font-weight:700;">${formatINR(totalPaid)}</td>
+            <td style="color:${balanceDue > 0 ? 'var(--amber)' : 'var(--emerald)'}; font-weight:800; font-size:14px;">${formatINR(balanceDue)}</td>
             <td style="text-align:right;">
-              ${userRole !== 'Viewer' ? `<button onclick="deleteCustomer('${c.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer;">🗑</button>` : ''}
+              ${balanceDue > 0 ? `<button onclick="openKhataSettlementModal('${c.id}')" class="btn btn-amber role-write">💵 Settle Khata</button>` : `<span style="color:var(--emerald); font-size:11px; font-weight:700;">Cleared ✓</span>`}
+              ${userRole !== 'Viewer' ? `<button onclick="deleteCustomer('${c.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:8px;">🗑</button>` : ''}
             </td>
           </tr>
         `;
       }).join('');
     }
 
+    function renderStockTable() {
+      document.getElementById('stock-tbody').innerHTML = (appData.items || []).map(item => {
+        const isLow = item.stock <= (item.minStock || 100);
+        return `
+          <tr>
+            <td><strong>${item.name}</strong></td>
+            <td style="color:var(--emerald); font-weight:700;">${formatINR(item.rate)} / ${item.unit}</td>
+            <td style="font-weight:800; font-size:14px; color:${isLow ? 'var(--rose)' : '#fff'};">${item.stock.toLocaleString()} ${item.unit}</td>
+            <td style="color:var(--text-muted);">${item.minStock || 100} ${item.unit}</td>
+            <td><span class="badge ${isLow ? 'badge-pending' : 'badge-paid'}">${isLow ? 'LOW STOCK' : 'IN STOCK'}</span></td>
+            <td style="text-align:right;">
+              <button onclick="openQuickRestockModal('${item.id}')" class="btn btn-dark btn-sm role-write">➕ Restock</button>
+              ${userRole !== 'Viewer' ? `<button onclick="deleteCatalogItem('${item.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:6px;">🗑</button>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No catalog items defined.</td></tr>';
+    }
+
     function renderExpensesTable() {
-      document.getElementById('expenses-tbody').innerHTML = (appData.expenses || []).map(e => {
+      const { expenses } = getFilteredData();
+      document.getElementById('expenses-tbody').innerHTML = expenses.map(e => {
         const c = appData.customers.find(cust => cust.id === e.custId) || { name: 'General' };
         return `
           <tr>
@@ -879,74 +1184,90 @@
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No expenses recorded for this range.</td></tr>';
     }
 
     function populateDropdowns() {
       const invC = document.getElementById('inv-cust-id');
       const expC = document.getElementById('exp-cust-id');
+      const qSelect = document.getElementById('quick-item-select');
+
       if (invC) invC.innerHTML = (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
       if (expC) expC.innerHTML = '<option value="">General Overhead</option>' + (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      if (qSelect) qSelect.innerHTML = '<option value="">-- Select Catalog Product --</option>' + (appData.items || []).map(it => `<option value="${it.id}">${it.name} (₹${it.rate}/${it.unit}) - [Stock: ${it.stock}]</option>`).join('');
     }
 
-    // WHATSAPP BILLING DISPATCH
+    function exportInvoicesCSV() {
+      let csv = 'Invoice Number,Client,Date,Due Date,Total Amount,Paid Amount,Khata Balance,Status\n';
+      (appData.invoices || []).forEach(i => {
+        const c = appData.customers.find(cust => cust.id === i.custId) || { name: 'Client' };
+        csv += `"${i.num}","${c.name}","${i.date}","${i.due}",${i.total},${i.paidAmt || 0},${i.dueAmt || 0},"${i.status}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `Commercial_Bills_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function sendWhatsAppReminder(invId) {
       const inv = appData.invoices.find(i => i.id === invId);
       const cust = appData.customers.find(c => c.id === inv.custId);
       if (!cust || !cust.phone) { alert('Please configure a valid phone number for this client!'); return; }
 
       const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${inv.id}`;
-      const msg = `Hello ${cust.name},\n\nYour invoice *#${inv.num}* for *${formatINR(inv.total)}* has been generated by AmutanTech.\n\n*Due Date:* ${inv.due}\n*Pay Online & View Bill:* ${portalUrl}\n\nThank you!`;
+      const msg = `Hello ${cust.name},\n\nYour commercial bill *#${inv.num}* for *${formatINR(inv.total)}* is available from ${appData.bizName || 'Kamadhenu Traders'}.\n\n*Paid:* ${formatINR(inv.paidAmt)}\n*Balance Due:* ${formatINR(inv.dueAmt)}\n*Pay via UPI & View Bill:* ${portalUrl}\n\nThank you!`;
       
       const cleanPhone = cust.phone.replace(/[^0-9]/g, '');
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // COPY CLIENT PORTAL LINK
     function copyClientPortalLink(invId) {
       const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${invId}`;
       navigator.clipboard.writeText(portalUrl);
       showToast('Client Portal Link Copied to Clipboard!');
     }
 
-    // EMAILJS AUTOMATED RECEIPT DISPATCH
-    function sendAutomatedEmailReceipt(inv, cust) {
-      if (!appData.emailjsKey || !appData.emailjsService || !appData.emailjsTemplate) return;
-      if (!cust.email) return;
-
-      emailjs.init(appData.emailjsKey);
-      emailjs.send(appData.emailjsService, appData.emailjsTemplate, {
-        to_name: cust.name,
-        to_email: cust.email,
-        invoice_num: inv.num,
-        total_amount: formatINR(inv.total),
-        paid_date: new Date().toISOString().split('T')[0]
-      }).then(() => showToast(`Receipt Emailed to ${cust.email}`))
-        .catch(err => console.error('Email error:', err));
-    }
-
-    // INVOICE BUILDER ACTIONS
     function openInvoiceModal() {
       if (!appData.customers.length) { alert('Create a customer first!'); openCustomerModal(); return; }
-      document.getElementById('inv-num').value = 'AT-' + new Date().getFullYear() + '-' + String((appData.invoices || []).length + 1).padStart(3, '0');
+      document.getElementById('inv-num').value = 'BILL-' + new Date().getFullYear() + '-' + String((appData.invoices || []).length + 1).padStart(3, '0');
       document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
-      const d = new Date(); d.setDate(d.getDate() + 14);
+      const d = new Date(); d.setDate(d.getDate() + 7);
       document.getElementById('inv-due').value = d.toISOString().split('T')[0];
       document.getElementById('inv-items-container').innerHTML = '';
-      addInvoiceItemRow('Custom Software Architecture', 1, 25000);
+      document.getElementById('inv-discount').value = 0;
+      document.getElementById('inv-roundoff').value = 0;
+      
+      if (appData.items && appData.items.length > 0) {
+        addInvoiceItemRow(appData.items[0].name, 1, appData.items[0].rate, appData.items[0].id);
+      } else {
+        addInvoiceItemRow('Item Description', 1, 1000, '');
+      }
       openModal('modal-invoice');
     }
 
-    function addInvoiceItemRow(desc = '', qty = 1, rate = 0) {
+    function addSelectedCatalogItem() {
+      const id = document.getElementById('quick-item-select').value;
+      if (!id) return;
+      const it = (appData.items || []).find(x => x.id === id);
+      if (it) {
+        addInvoiceItemRow(it.name, 1, it.rate, it.id);
+      }
+    }
+
+    function addInvoiceItemRow(desc = '', qty = 1, rate = 0, itemId = '') {
       const c = document.getElementById('inv-items-container');
       const id = 'row_' + Date.now() + Math.random().toString(36).substr(2, 3);
       const div = document.createElement('div');
       div.id = id;
       div.style.cssText = 'display:flex; gap:6px; align-items:center;';
       div.innerHTML = `
-        <input type="text" value="${desc}" placeholder="Deliverable Description" class="form-control item-desc" required style="flex:2;" />
-        <input type="number" value="${qty}" min="1" placeholder="Qty" oninput="calcInvTotal()" class="form-control item-qty" required style="width:70px; text-align:center;" />
-        <input type="number" value="${rate}" min="0" placeholder="Rate" oninput="calcInvTotal()" class="form-control item-rate" required style="width:110px; text-align:right;" />
+        <input type="hidden" class="item-link-id" value="${itemId}" />
+        <input type="text" value="${desc}" placeholder="Product / Description" class="form-control item-desc" required style="flex:2;" />
+        <input type="number" value="${qty}" min="0.01" step="any" placeholder="Qty" oninput="calcInvTotal()" class="form-control item-qty" required style="width:80px; text-align:center;" />
+        <input type="number" value="${rate}" min="0" step="any" placeholder="Rate" oninput="calcInvTotal()" class="form-control item-rate" required style="width:110px; text-align:right;" />
         <button type="button" onclick="document.getElementById('${id}').remove(); calcInvTotal();" style="background:none; border:none; color:var(--rose); cursor:pointer;">✕</button>
       `;
       c.appendChild(div);
@@ -954,15 +1275,37 @@
     }
 
     function calcInvTotal() {
-      let t = 0;
+      let sub = 0;
       const descs = document.querySelectorAll('.item-desc');
       const qtys = document.querySelectorAll('.item-qty');
       const rates = document.querySelectorAll('.item-rate');
       for (let i = 0; i < descs.length; i++) {
-        t += (Number(qtys[i].value) || 0) * (Number(rates[i].value) || 0);
+        sub += (Number(qtys[i].value) || 0) * (Number(rates[i].value) || 0);
       }
-      document.getElementById('inv-total-txt').innerText = formatINR(t);
-      return t;
+
+      const disc = Number(document.getElementById('inv-discount').value) || 0;
+      const roff = Number(document.getElementById('inv-roundoff').value) || 0;
+      const total = Math.max(0, (sub - disc) + roff);
+
+      document.getElementById('inv-subtotal-txt').innerText = formatINR(sub);
+      document.getElementById('inv-discount-txt').innerText = formatINR(disc);
+      document.getElementById('inv-total-txt').innerText = formatINR(total);
+      
+      const paidInput = document.getElementById('inv-paid-amt');
+      if (!paidInput.dataset.manual) {
+        paidInput.value = total;
+      }
+      calcKhataDue();
+      return total;
+    }
+
+    function calcKhataDue() {
+      const paidInput = document.getElementById('inv-paid-amt');
+      paidInput.dataset.manual = 'true';
+      const total = Number(document.getElementById('inv-total-txt').innerText.replace(/[^0-9.-]+/g, '')) || 0;
+      const paid = Number(paidInput.value) || 0;
+      const due = Math.max(0, total - paid);
+      document.getElementById('inv-due-amt').value = due.toFixed(2);
     }
 
     async function saveInvoice(e) {
@@ -970,16 +1313,39 @@
       const descs = document.querySelectorAll('.item-desc');
       const qtys = document.querySelectorAll('.item-qty');
       const rates = document.querySelectorAll('.item-rate');
+      const itemIds = document.querySelectorAll('.item-link-id');
       const items = [];
-      let total = 0;
+      let subtotal = 0;
 
       for (let i = 0; i < descs.length; i++) {
         const d = descs[i].value.trim();
         const q = Number(qtys[i].value || 1);
         const r = Number(rates[i].value || 0);
+        const lId = itemIds[i].value;
         const sub = q * r;
-        if (d) { items.push({ desc: d, qty: q, rate: r, amt: sub }); total += sub; }
+        if (d) { 
+          items.push({ desc: d, qty: q, rate: r, amt: sub, itemId: lId }); 
+          subtotal += sub; 
+
+          // Stock Auto-Deduction Logic
+          if (lId) {
+            const catalogItem = (appData.items || []).find(it => it.id === lId);
+            if (catalogItem) {
+              catalogItem.stock = Math.max(0, catalogItem.stock - q);
+            }
+          }
+        }
       }
+
+      const disc = Number(document.getElementById('inv-discount').value) || 0;
+      const roff = Number(document.getElementById('inv-roundoff').value) || 0;
+      const total = Math.max(0, (subtotal - disc) + roff);
+      const paidAmt = Number(document.getElementById('inv-paid-amt').value) || 0;
+      const dueAmt = Math.max(0, total - paidAmt);
+
+      let status = 'Paid';
+      if (dueAmt > 0 && paidAmt > 0) status = 'Partial';
+      else if (dueAmt > 0 && paidAmt === 0) status = 'Pending';
 
       const invId = 'inv_' + Date.now();
       const custId = document.getElementById('inv-cust-id').value;
@@ -991,23 +1357,30 @@
         custId: custId,
         date: document.getElementById('inv-date').value,
         due: document.getElementById('inv-due').value,
+        payMode: document.getElementById('inv-paymode').value,
         note: document.getElementById('inv-note').value.trim(),
-        status: document.getElementById('inv-status').value,
-        items, total
+        status,
+        items,
+        subtotal,
+        discount: disc,
+        roundoff: roff,
+        total,
+        paidAmt,
+        dueAmt
       };
 
       if (!appData.invoices) appData.invoices = [];
       appData.invoices.push(inv);
       persist();
 
-      // Publish snapshot to public portal path
       if (window.fbDb && window.fbRef && window.fbSet) {
         await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${inv.id}`), {
           ...inv,
           customer: cust,
           accentColor: appData.accentColor || '#0284c7',
           upiId: appData.upiId || 'amutantech@okaxis',
-          logoData: appData.logoData || ''
+          logoData: appData.logoData || '',
+          bizName: appData.bizName || 'Kamadhenu Traders'
         });
       }
 
@@ -1015,15 +1388,127 @@
       previewInvoice(inv.id);
     }
 
-    function toggleInvStatus(id) {
-      const inv = appData.invoices.find(i => i.id === id);
-      if (inv) {
-        inv.status = inv.status === 'Paid' ? 'Pending' : 'Paid';
-        persist();
-        if (inv.status === 'Paid') {
-          const cust = appData.customers.find(c => c.id === inv.custId);
-          sendAutomatedEmailReceipt(inv, cust);
+    function openKhataSettlementModal(custId) {
+      const cust = (appData.customers || []).find(c => c.id === custId);
+      if (!cust) return;
+
+      const custInvoices = (appData.invoices || []).filter(i => i.custId === cust.id);
+      const totalBilled = custInvoices.reduce((a, b) => a + Number(b.total || 0), 0);
+      const invPaid = custInvoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
+      const settlePaid = (appData.settlements || []).filter(s => s.custId === cust.id).reduce((a, b) => a + Number(b.amount || 0), 0);
+      const balanceDue = Math.max(0, totalBilled - (invPaid + settlePaid));
+
+      document.getElementById('settle-cust-id').value = cust.id;
+      document.getElementById('settle-cust-name').innerText = cust.name;
+      document.getElementById('settle-current-due').innerText = formatINR(balanceDue);
+      document.getElementById('settle-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('settle-amount').value = balanceDue;
+
+      openModal('modal-settlement');
+    }
+
+    function saveKhataSettlement(e) {
+      e.preventDefault();
+      const custId = document.getElementById('settle-cust-id').value;
+      const amount = Number(document.getElementById('settle-amount').value) || 0;
+      const date = document.getElementById('settle-date').value;
+      const payMode = document.getElementById('settle-paymode').value;
+      const note = document.getElementById('settle-note').value.trim();
+
+      const stl = {
+        id: 'stl_' + Date.now(),
+        custId,
+        date,
+        amount,
+        payMode,
+        note
+      };
+
+      if (!appData.settlements) appData.settlements = [];
+      appData.settlements.push(stl);
+
+      // Rebalance Invoices status for this customer
+      let remainingCredit = amount;
+      (appData.invoices || []).filter(i => i.custId === custId && i.dueAmt > 0).forEach(inv => {
+        if (remainingCredit <= 0) return;
+        if (remainingCredit >= inv.dueAmt) {
+          remainingCredit -= inv.dueAmt;
+          inv.paidAmt += inv.dueAmt;
+          inv.dueAmt = 0;
+          inv.status = 'Paid';
+        } else {
+          inv.paidAmt += remainingCredit;
+          inv.dueAmt -= remainingCredit;
+          inv.status = 'Partial';
+          remainingCredit = 0;
         }
+      });
+
+      persist();
+      closeModal('modal-settlement');
+      previewPaymentVoucher(stl);
+    }
+
+    function previewPaymentVoucher(stl) {
+      const cust = (appData.customers || []).find(c => c.id === stl.custId) || { name: 'Customer' };
+      document.getElementById('voucher-printable').innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+          <h2 style="margin:0; font-size:18px;">${appData.bizName || 'Kamadhenu Commercial Traders'}</h2>
+          <p style="margin:2px 0; font-size:11px; color:#64748b;">OFFICIAL CASH RECEIPT / PAYMENT VOUCHER</p>
+          <div style="font-size:12px; font-weight:700; margin-top:4px;">Voucher #: ${stl.id} | Date: ${stl.date}</div>
+        </div>
+        <div style="font-size:13px; line-height:1.8; margin-bottom:20px;">
+          Received with thanks from: <strong>${cust.name}</strong><br/>
+          The sum of: <strong style="font-size:16px; color:#15803d;">${formatINR(stl.amount)}</strong><br/>
+          Payment Mode: <strong>${stl.payMode}</strong><br/>
+          Remarks / Note: <em>${stl.note || 'Khata Clearance'}</em>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:12px;">
+          <div>Customer Signature</div>
+          <div>Authorized Signatory</div>
+        </div>
+      `;
+      openModal('modal-view-voucher');
+    }
+
+    function openItemModal(itemId = null) {
+      document.getElementById('item-edit-id').value = '';
+      document.getElementById('item-name').value = '';
+      document.getElementById('item-rate').value = '';
+      document.getElementById('item-stock').value = '';
+      document.getElementById('item-min-stock').value = '100';
+      openModal('modal-item');
+    }
+
+    function openQuickRestockModal(itemId) {
+      const it = (appData.items || []).find(x => x.id === itemId);
+      if (!it) return;
+      const addQty = prompt(`Restock ${it.name} (Current: ${it.stock} ${it.unit}). Enter additional quantity to ADD:`, '500');
+      if (addQty && !isNaN(addQty) && Number(addQty) > 0) {
+        it.stock += Number(addQty);
+        persist();
+        showToast(`Added ${addQty} ${it.unit} to stock!`);
+      }
+    }
+
+    function saveCatalogItem(e) {
+      e.preventDefault();
+      if (!appData.items) appData.items = [];
+      appData.items.push({
+        id: 'it_' + Date.now(),
+        name: document.getElementById('item-name').value.trim(),
+        rate: Number(document.getElementById('item-rate').value || 0),
+        unit: document.getElementById('item-unit').value.trim() || 'Unit',
+        stock: Number(document.getElementById('item-stock').value || 0),
+        minStock: Number(document.getElementById('item-min-stock').value || 50)
+      });
+      persist(); closeModal('modal-item'); showToast('Product Saved to Inventory');
+    }
+
+    function deleteCatalogItem(id) {
+      if (confirm('Delete catalog item?')) {
+        appData.items = appData.items.filter(it => it.id !== id);
+        persist();
       }
     }
 
@@ -1034,7 +1519,6 @@
       }
     }
 
-    // CUSTOMER ACTIONS
     function openCustomerModal() { openModal('modal-customer'); }
     function saveCustomer(e) {
       e.preventDefault();
@@ -1049,13 +1533,12 @@
       persist(); closeModal('modal-customer'); showToast('Customer Saved');
     }
     function deleteCustomer(id) {
-      if (confirm('Delete customer?')) {
+      if (confirm('Delete customer record?')) {
         appData.customers = appData.customers.filter(c => c.id !== id);
         persist();
       }
     }
 
-    // EXPENSES
     function openExpenseModal() {
       openModal('modal-expense');
       document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
@@ -1080,8 +1563,8 @@
       }
     }
 
-    // SETTINGS ACTIONS
     function saveSettings() {
+      appData.bizName = document.getElementById('cfg-biz-name').value.trim() || 'Kamadhenu Traders';
       appData.emailjsKey = document.getElementById('cfg-emailjs-key').value.trim();
       appData.emailjsService = document.getElementById('cfg-emailjs-service').value.trim();
       appData.emailjsTemplate = document.getElementById('cfg-emailjs-template').value.trim();
@@ -1091,8 +1574,7 @@
       showToast('Settings Synchronized');
     }
 
-    // SHARED INVOICE HTML TEMPLATE WITH LOGO
-    function generateInvoiceHTML(inv, cust, accent, upi, logoData) {
+    function generateInvoiceHTML(inv, cust, accent, upi, logoData, bizName) {
       const logoHTML = (logoData && logoData.trim() !== '') 
         ? `<img src="${logoData}" alt="Logo" style="max-height: 52px; max-width: 140px; object-fit: contain; border-radius: 6px;" />`
         : `<div style="width:44px; height:44px; background:${accent}; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:22px;">A</div>`;
@@ -1103,12 +1585,12 @@
             <div style="display:flex; gap:14px; align-items:center;">
               ${logoHTML}
               <div>
-                <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">AmutanTech</h1>
-                <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Cloud Enterprise Software Suite</p>
+                <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">${bizName || 'Commercial Traders'}</h1>
+                <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Commercial Billing & Procurement</p>
               </div>
             </div>
             <div style="text-align:right;">
-              <h2 style="font-size:20px; font-weight:900; margin:0; color:#334155;">INVOICE</h2>
+              <h2 style="font-size:20px; font-weight:900; margin:0; color:#334155;">BILL / INVOICE</h2>
               <div style="font-size:12px; font-weight:700; color:#64748b; margin-top:2px;"># ${inv.num}</div>
               <div style="display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-top:4px; ${inv.status === 'Paid' ? 'background:#d1fae5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'}">${inv.status.toUpperCase()}</div>
             </div>
@@ -1117,14 +1599,14 @@
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
             <div>
               <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed To:</strong>
-              <div style="font-size:14px; font-weight:800; margin-top:2px;">${(cust && cust.name) || 'Customer'}</div>
+              <div style="font-size:14px; font-weight:800; margin-top:2px;">${(cust && cust.name) || 'Customer / Party'}</div>
               <div style="color:#64748b;">${(cust && cust.email) || ''} ${(cust && cust.phone) ? '• ' + cust.phone : ''}</div>
               <div style="color:#64748b;">${(cust && cust.address) || ''}</div>
             </div>
             <div style="text-align:right;">
-              <div><span style="color:#64748b;">Date:</span> <strong>${inv.date}</strong></div>
+              <div><span style="color:#64748b;">Bill Date:</span> <strong>${inv.date}</strong></div>
               <div><span style="color:#64748b;">Due Date:</span> <strong>${inv.due}</strong></div>
-              <div><span style="color:#64748b;">Tax Rate:</span> <strong style="color:#10b981;">0% Direct</strong></div>
+              <div><span style="color:#64748b;">Pay Mode:</span> <strong>${inv.payMode || 'Direct'}</strong></div>
             </div>
           </div>
 
@@ -1132,10 +1614,10 @@
             <thead>
               <tr style="background:${accent}15; border-bottom:2px solid ${accent}; text-align:left;">
                 <th style="padding:8px; width:30px;">#</th>
-                <th style="padding:8px;">Description</th>
+                <th style="padding:8px;">Item Description</th>
                 <th style="padding:8px; text-align:center; width:60px;">Qty</th>
-                <th style="padding:8px; text-align:right; width:90px;">Rate</th>
-                <th style="padding:8px; text-align:right; width:100px;">Amount</th>
+                <th style="padding:8px; text-align:right; width:90px;">Rate (₹)</th>
+                <th style="padding:8px; text-align:right; width:100px;">Amount (₹)</th>
               </tr>
             </thead>
             <tbody>
@@ -1153,8 +1635,8 @@
 
           <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:24px;">
             <div style="display:flex; gap:16px; align-items:center;">
-              <div id="admin-qrcode" class="qr-target" style="width:72px; height:72px;"></div>
-              <div id="portal-qrcode" class="qr-target" style="width:72px; height:72px;"></div>
+              <div id="modal-qrcode-target" style="width:72px; height:72px;"></div>
+              <div id="portal-qrcode-target" style="width:72px; height:72px;"></div>
               <div>
                 <strong style="color:#64748b; font-size:10px; text-transform:uppercase;">Scan UPI to Pay:</strong>
                 <div style="font-size:12px; font-weight:700; color:#0f172a;">${upi}</div>
@@ -1162,22 +1644,26 @@
               </div>
             </div>
 
-            <div style="text-align:right; width:220px;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#64748b;">
-                <span>Subtotal:</span> <span>${formatINR(inv.total)}</span>
+            <div style="text-align:right; width:240px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:3px; color:#64748b;">
+                <span>Subtotal:</span> <span>${formatINR(inv.subtotal || inv.total)}</span>
               </div>
-              <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#64748b;">
-                <span>Tax (0%):</span> <span>₹0.00</span>
+              ${inv.discount > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:3px; color:var(--rose);"><span>Discount:</span> <span>- ${formatINR(inv.discount)}</span></div>` : ''}
+              <div style="display:flex; justify-content:space-between; border-top:1px solid #e2e8f0; padding-top:4px; font-size:14px; font-weight:800; color:${accent};">
+                <span>Final Bill:</span> <span>${formatINR(inv.total)}</span>
               </div>
-              <div style="display:flex; justify-content:space-between; border-top:2px solid ${accent}; padding-top:6px; font-size:16px; font-weight:900; color:${accent};">
-                <span>Total:</span> <span>${formatINR(inv.total)}</span>
+              <div style="display:flex; justify-content:space-between; margin-top:3px; color:#15803d; font-weight:700;">
+                <span>Amount Paid:</span> <span>${formatINR(inv.paidAmt || 0)}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top:3px; color:#b45309; font-weight:800;">
+                <span>Khata Balance Due:</span> <span>${formatINR(inv.dueAmt || 0)}</span>
               </div>
             </div>
           </div>
 
           <div style="border-top:1px solid #e2e8f0; padding-top:12px; font-size:11px; display:flex; justify-content:space-between; color:#64748b;">
-            <div>AmutanTech Enterprise Cloud Suite</div>
-            <div>Computer Generated Invoice • Valid without Signature</div>
+            <div>${bizName || 'Commercial Traders'}</div>
+            <div>Computer Generated Commercial Bill • Direct Settlement</div>
           </div>
         </div>
       `;
@@ -1187,7 +1673,7 @@
       const el = document.getElementById(elemId);
       if (!el) return;
       el.innerHTML = '';
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=AmutanTech&am=${total}&cu=INR`;
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=CommercialPayment&am=${total}&cu=INR`;
       new QRCode(el, {
         text: upiUrl,
         width: 72,
@@ -1198,18 +1684,66 @@
       });
     }
 
+    function generateThermalReceipt(inv, cust) {
+      return `
+        <div style="text-align:center; margin-bottom:10px;">
+          <h3 style="margin:0; font-size:16px;">${appData.bizName || 'Commercial Traders'}</h3>
+          <p style="margin:2px 0; font-size:10px;">COMMERCIAL RECEIPT</p>
+          <p style="margin:2px 0; font-size:10px;">Bill #: ${inv.num} | Date: ${inv.date}</p>
+        </div>
+        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
+        <div style="font-size:11px; margin-bottom:6px;">
+          <strong>Party:</strong> ${(cust && cust.name) || 'Cash Client'}<br/>
+          <strong>Pay Mode:</strong> ${inv.payMode || 'Cash'}
+        </div>
+        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
+        <table style="width:100%; font-size:11px; text-align:left;">
+          ${inv.items.map(it => `
+            <tr>
+              <td>${it.desc}<br/>${it.qty} x ₹${it.rate}</td>
+              <td style="text-align:right; vertical-align:bottom;"><strong>${formatINR(it.amt)}</strong></td>
+            </tr>
+          `).join('')}
+        </table>
+        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold;">
+          <span>NET BILL:</span>
+          <span>${formatINR(inv.total)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:2px;">
+          <span>PAID NOW:</span>
+          <span>${formatINR(inv.paidAmt || 0)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; margin-top:2px;">
+          <span>KHATA DUE:</span>
+          <span>${formatINR(inv.dueAmt || 0)}</span>
+        </div>
+        <div style="font-size:10px; text-align:center; margin-top:10px;">
+          Status: ${inv.status.toUpperCase()}<br/>
+          Thank you for your business!
+        </div>
+      `;
+    }
+
     function previewInvoice(id) {
       const inv = appData.invoices.find(i => i.id === id);
       const cust = appData.customers.find(c => c.id === inv.custId);
       if (!inv) return;
+
       document.getElementById('printable-invoice').innerHTML = generateInvoiceHTML(
-        inv, 
-        cust, 
-        appData.accentColor || '#0284c7', 
-        appData.upiId || 'amutantech@okaxis', 
-        appData.logoData || ''
+        inv, cust, appData.accentColor || '#0284c7', appData.upiId || 'amutantech@okaxis', appData.logoData || '', appData.bizName || 'Commercial Traders'
       );
-      generateQRCode('admin-qrcode', appData.upiId || 'amutantech@okaxis', inv.total);
+      generateQRCode('modal-qrcode-target', appData.upiId || 'amutantech@okaxis', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
+
+      document.getElementById('btn-print-a4').onclick = () => window.print();
+      document.getElementById('btn-print-thermal').onclick = () => {
+        const thermalEl = document.getElementById('thermal-receipt');
+        thermalEl.innerHTML = generateThermalReceipt(inv, cust);
+        thermalEl.classList.remove('hidden');
+        window.print();
+        thermalEl.classList.add('hidden');
+      };
+
       openModal('modal-view-invoice');
     }
   </script>
