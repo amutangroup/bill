@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AmutanTech - Enterprise Billing, Stock & Khata ERP</title>
+  <title>Amutan.co </title>
   
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <!-- Firebase Realtime Database SDK -->
@@ -49,7 +50,8 @@
       --emerald: #10b981;
       --rose: #f43f5e;
       --amber: #f59e0b;
-      --accent: #0284c7;
+      --purple: #a855f7;
+      --accent: #881337;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; }
@@ -73,6 +75,7 @@
     .btn-emerald { background: var(--emerald); color: #fff; }
     .btn-rose { background: var(--rose); color: #fff; }
     .btn-amber { background: var(--amber); color: #000; font-weight: 700; }
+    .btn-purple { background: var(--purple); color: #fff; }
     .btn-dark { background: #1e293b; color: #fff; border: 1px solid var(--card-border); }
     .btn-dark:hover { background: #334155; }
     .btn-wa { background: #25d366; color: #fff; }
@@ -94,9 +97,13 @@
     .badge-paid { background: #064e3b; color: #34d399; border: 1px solid #059669; }
     .badge-partial { background: #1e3a8a; color: #60a5fa; border: 1px solid #2563eb; }
     .badge-pending { background: #78350f; color: #fbbf24; border: 1px solid #d97706; }
+    .badge-signed { background: #4c1d95; color: #c084fc; border: 1px solid #7e22ce; }
+    .badge-dunning-upcoming { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
+    .badge-dunning-today { background: #78350f; color: #fde047; border: 1px solid #eab308; }
+    .badge-dunning-overdue { background: #881337; color: #fda4af; border: 1px solid #f43f5e; font-weight: 800; }
     
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; overflow-y: auto; }
-    .modal-box { background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; width: 100%; max-width: 650px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
+    .modal-box { background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; width: 100%; max-width: 680px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 14px; margin-bottom: 18px; }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
@@ -104,14 +111,24 @@
     .form-control:focus { border-color: var(--cyan); }
     
     #toast { position: fixed; bottom: 20px; right: 20px; background: #0284c7; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: none; z-index: 200; }
-    
     .date-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--card-border); margin-bottom: 20px; }
+
+    /* Wire Transfer Matrix Box */
+    .bank-matrix-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 16px; font-size: 11px; }
+    .bank-matrix-item strong { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
+    .bank-matrix-item span { font-weight: 700; color: #0f172a; font-family: monospace; font-size: 12px; }
+
+    /* Vault Box Styling */
+    .vault-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .vault-chip { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 600; text-decoration: none; color: #0f172a; transition: 0.15s; }
+    .vault-chip:hover { background: #e2e8f0; border-color: #94a3b8; }
+
+    #sig-canvas { border: 2px dashed #334155; border-radius: 8px; background: #060913; width: 100%; height: 130px; cursor: crosshair; touch-action: none; }
 
     @media print {
       body * { visibility: hidden !important; }
-      #printable-invoice, #printable-invoice *, #portal-printable-invoice, #portal-printable-invoice *, #thermal-receipt, #thermal-receipt *, #voucher-printable, #voucher-printable * { visibility: visible !important; }
-      #printable-invoice, #portal-printable-invoice, #voucher-printable { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
-      #thermal-receipt { position: absolute; left: 0; top: 0; width: 80mm; padding: 5px; font-family: monospace; font-size: 12px; color: #000; background: #fff; }
+      #printable-invoice, #printable-invoice *, #portal-printable-invoice, #portal-printable-invoice * { visibility: visible !important; }
+      #printable-invoice, #portal-printable-invoice { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; color: #0f172a; }
       .no-print { display: none !important; }
     }
     .hidden { display: none !important; }
@@ -121,38 +138,28 @@
 
   <div id="toast">Notification</div>
 
-  <!-- AUTHENTICATION SCREEN -->
+  <!-- AUTHENTICATION SCREEN: LOGIN ALONE (SIGN UP REMOVED) -->
   <div id="auth-screen" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #060913;">
     <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; width: 100%; max-width: 400px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;">
-      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff;">A</div>
-      <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">AmutanTech Suite</h1>
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Commercial Billing, Stock & Khata ERP</p>
-      
-      <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-        <button id="auth-tab-login" onclick="toggleAuthMode('login')" class="btn btn-cyan" style="flex:1; justify-content: center;">Login</button>
-        <button id="auth-tab-signup" onclick="toggleAuthMode('signup')" class="btn btn-dark" style="flex:1; justify-content: center;">Create Account</button>
+      <div style="width: 76px; height: 76px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+        <img id="auth-logo-preview" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Amutan.co Logo" />
       </div>
+      <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">Amutan.co</h1>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Commercial Billing, Sign-Off & Dunning Suite</p>
 
       <form onsubmit="handleAuthSubmit(event)" style="text-align: left;">
         <div class="form-group">
-          <label>Username</label>
-          <input type="text" id="auth-username" value="admin" required class="form-control" placeholder="Enter username" />
+          <label>Username / Client ID / Phone</label>
+          <input type="text" id="auth-username" value="admin" required class="form-control" placeholder="Enter username or customer ID" />
         </div>
         <div class="form-group">
           <label>Password</label>
           <input type="password" id="auth-password" value="amutan123" required class="form-control" placeholder="Enter password" />
         </div>
-        <div id="auth-role-group" class="form-group hidden">
-          <label>Account Role</label>
-          <select id="auth-role" class="form-control">
-            <option value="Admin">Admin (Full Access & P&L)</option>
-            <option value="Biller">Biller (Bill Generator & Cash Collections)</option>
-            <option value="Viewer">Viewer (Read Only)</option>
-          </select>
-        </div>
         <div id="auth-err" class="hidden" style="color: var(--rose); font-size: 12px; margin-bottom: 12px;"></div>
         <button type="submit" id="auth-submit-btn" class="btn btn-cyan" style="width: 100%; padding: 12px; justify-content: center; font-size: 14px;">Sign In</button>
       </form>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 16px;">Client credentials are automatically generated upon registration.</p>
     </div>
   </div>
 
@@ -163,9 +170,8 @@
     <aside class="sidebar no-print">
       <div>
         <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 20px;">
-          <div id="sidebar-logo-box" style="width: 40px; height: 40px; background: linear-gradient(135deg, #06b6d4, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden; flex-shrink: 0;">
-            <span id="sidebar-logo-txt">A</span>
-            <img id="sidebar-logo-img" class="hidden" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo" />
+          <div id="sidebar-logo-box" style="width: 44px; height: 44px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 2px;">
+            <img id="sidebar-logo-img" style="width: 100%; height: 100%; object-fit: contain;" alt="Amutan.co Logo" />
           </div>
           <div>
             <h2 style="font-size: 14px; font-weight: 800;" id="user-display-name">admin</h2>
@@ -175,11 +181,11 @@
 
         <nav>
           <button class="nav-btn active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">📊 Financial Hub</button>
-          <button class="nav-btn" id="tab-btn-invoices" onclick="switchTab('invoices')">🧾 Bill Generator</button>
-          <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Customer Khata</button>
-          <button class="nav-btn" id="tab-btn-stock" onclick="switchTab('stock')">📦 Inventory & Stock</button>
-          <button class="nav-btn" id="tab-btn-expenses" onclick="switchTab('expenses')">💳 Expenses</button>
-          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings & Branding</button>
+          <button class="nav-btn" id="tab-btn-invoices" onclick="switchTab('invoices')">🧾 Software Bills & SOW</button>
+          <button class="nav-btn" id="tab-btn-dunning" onclick="switchTab('dunning')">🚨 Dunning Escalations</button>
+          <button class="nav-btn" id="tab-btn-customers" onclick="switchTab('customers')">👥 Client Accounts</button>
+          <button class="nav-btn" id="tab-btn-expenses" onclick="switchTab('expenses')">💳 Cloud & Dev Expenses</button>
+          <button class="nav-btn" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Banking & Mandates</button>
         </nav>
       </div>
 
@@ -207,10 +213,10 @@
       <section id="tab-dashboard">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h1 style="font-size: 24px; font-weight: 800;">Commercial Hub</h1>
-            <p style="font-size: 13px; color: var(--text-muted);">Real-time Cash Collection, Outstanding Khata & Stock Flow</p>
+            <h1 style="font-size: 24px; font-weight: 800;">Amutan.co Software Commercial Hub</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Real-time Client Cashflow, Sign-offs, Receivables & Cloud Ops</p>
           </div>
-          <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Bill</button>
+          <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Software Invoice</button>
         </div>
 
         <div class="grid-4">
@@ -219,40 +225,34 @@
             <div class="card-val" id="stat-rev">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Actual Cash Collected <span>💵</span></div>
+            <div class="card-title">Collected Milestone Cash <span>💵</span></div>
             <div class="card-val" id="stat-paid" style="color: var(--emerald);">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Pending Khata Receivables <span>⏳</span></div>
+            <div class="card-title">Pending Milestone Receivables <span>⏳</span></div>
             <div class="card-val" id="stat-due" style="color: var(--amber);">₹0</div>
           </div>
           <div class="card">
-            <div class="card-title">Operating Expenses <span>📉</span></div>
+            <div class="card-title">Operating & Cloud Overhead <span>📉</span></div>
             <div class="card-val" id="stat-exp" style="color: var(--rose);">₹0</div>
           </div>
         </div>
 
         <div class="card" style="margin-bottom: 24px;">
-          <div class="card-title">Financial Flow (Gross Billed vs Collected Cash vs Expenses)</div>
+          <div class="card-title">Financial Flow (Gross Billed vs Milestone Collections vs Overhead)</div>
           <div style="height: 240px; position: relative;"><canvas id="financeChart"></canvas></div>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Recent Invoices</h3>
-            <div id="dash-recent-invoices" style="display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-          <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Stock Alert (Low Inventory)</h3>
-            <div id="dash-stock-alerts" style="display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
+        <div class="card">
+          <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Recent Project Invoices & SOWs</h3>
+          <div id="dash-recent-invoices" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
       </section>
 
       <!-- TAB 2: INVOICES -->
       <section id="tab-invoices" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Billing & Client Ledger</h1>
+          <h1 style="font-size: 22px; font-weight: 800;">Software Invoices & Milestones</h1>
           <div style="display: flex; gap: 8px;">
             <button onclick="exportInvoicesCSV()" class="btn btn-dark">📊 Export Excel/CSV</button>
             <button onclick="openInvoiceModal()" class="btn btn-cyan role-write">➕ Create Bill</button>
@@ -262,13 +262,13 @@
           <table>
             <thead>
               <tr>
-                <th>Bill #</th>
-                <th>Client / Party</th>
-                <th>Issued</th>
-                <th>Bill Total</th>
-                <th>Paid Now</th>
-                <th>Khata Balance</th>
-                <th>Status</th>
+                <th>Invoice / Project</th>
+                <th>Client / Organization</th>
+                <th>Milestone Status</th>
+                <th>Total Value</th>
+                <th>Paid Advance</th>
+                <th>Balance Due</th>
+                <th>Sign-off</th>
                 <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
@@ -277,25 +277,54 @@
         </div>
       </section>
 
-      <!-- TAB 3: CUSTOMER KHATA -->
+      <!-- TAB 3: DUNNING AUTOMATION ESCALATIONS -->
+      <section id="tab-dunning" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h1 style="font-size: 22px; font-weight: 800;">Automated Dunning Escalations</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Smart Multi-Stage Follow-ups (3 Days Before Due • Due Date • Overdue Notice)</p>
+          </div>
+          <button onclick="runDunningBatch()" class="btn btn-purple role-write">⚡ Run Auto-Dunning Scan</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice / Project</th>
+                <th>Client</th>
+                <th>Due Date</th>
+                <th>Balance Due</th>
+                <th>Dunning Stage</th>
+                <th>Last Follow-up</th>
+                <th style="text-align: right;">Action Dispatch</th>
+              </tr>
+            </thead>
+            <tbody id="dunning-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: CUSTOMER LEDGER -->
       <section id="tab-customers" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <div>
-            <h1 style="font-size: 22px; font-weight: 800;">Customer Khata Ledger</h1>
-            <p style="font-size: 13px; color: var(--text-muted);">Manage party dues, record settlements, and generate receipts</p>
+            <h1 style="font-size: 22px; font-weight: 800;">Client Enterprise Ledger & Accounts</h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Client login credentials automatically sync to their username and password</p>
           </div>
-          <button onclick="openCustomerModal()" class="btn btn-emerald role-write">👥 Add Customer</button>
+          <button onclick="openCustomerModal()" class="btn btn-emerald role-write">👥 Add Client</button>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Client / Mandi Party</th>
-                <th>Contact</th>
-                <th>Total Billed</th>
-                <th>Total Paid</th>
-                <th>Unpaid Khata Balance</th>
-                <th style="text-align: right;">Khata Action</th>
+                <th>Client / Enterprise</th>
+                <th>Customer ID / Phone</th>
+                <th>Login Username & Password</th>
+                <th>Total Invoiced</th>
+                <th>Total Settled</th>
+                <th>Outstanding Balance</th>
+                <th style="text-align: right;">Action</th>
               </tr>
             </thead>
             <tbody id="customers-tbody"></tbody>
@@ -303,36 +332,10 @@
         </div>
       </section>
 
-      <!-- TAB 4: INVENTORY & STOCK -->
-      <section id="tab-stock" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <div>
-            <h1 style="font-size: 22px; font-weight: 800;">Inventory & Stock Master</h1>
-            <p style="font-size: 13px; color: var(--text-muted);">Auto-deducted on invoice generation with restock logs</p>
-          </div>
-          <button onclick="openItemModal()" class="btn btn-cyan role-write">📦 Add New Product</button>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Item / Description</th>
-                <th>Default Rate</th>
-                <th>Stock on Hand</th>
-                <th>Low Stock Limit</th>
-                <th>Status</th>
-                <th style="text-align: right;">Stock Action</th>
-              </tr>
-            </thead>
-            <tbody id="stock-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
       <!-- TAB 5: EXPENSES -->
       <section id="tab-expenses" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Operating Expenses</h1>
+          <h1 style="font-size: 22px; font-weight: 800;">Cloud & Developer Overhead</h1>
           <button onclick="openExpenseModal()" class="btn btn-rose role-write">💳 Add Expense</button>
         </div>
         <div class="table-container">
@@ -342,7 +345,7 @@
                 <th>Title / Description</th>
                 <th>Category</th>
                 <th>Date</th>
-                <th>Tagged Customer</th>
+                <th>Tagged Client</th>
                 <th>Amount</th>
                 <th style="text-align: right;">Action</th>
               </tr>
@@ -352,11 +355,11 @@
         </div>
       </section>
 
-      <!-- TAB 6: SETTINGS -->
+      <!-- TAB 6: SETTINGS & BANK MANDATES -->
       <section id="tab-settings" class="hidden">
         <div style="margin-bottom: 20px;">
-          <h1 style="font-size: 22px; font-weight: 800;">Enterprise Configuration</h1>
-          <p style="font-size: 13px; color: var(--text-muted);">Branding, Print Presets, and Payment Details</p>
+          <h1 style="font-size: 22px; font-weight: 800;">Enterprise Bank Mandates & Branding</h1>
+          <p style="font-size: 13px; color: var(--text-muted);">Configure wire transfer matrix (NEFT/RTGS/IMPS/SWIFT) and EmailJS dunning triggers</p>
         </div>
 
         <div class="grid-2">
@@ -364,15 +367,15 @@
             <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Company Details & Branding</h3>
             <div class="form-group">
               <label>Business Name</label>
-              <input type="text" id="cfg-biz-name" class="form-control" placeholder="AmutanTech / Trader Name" />
+              <input type="text" id="cfg-biz-name" class="form-control" placeholder="Amutan.co" />
             </div>
             <div class="form-group">
-              <label>Brand Logo (Max 500KB)</label>
+              <label>Custom Brand Logo (Max 500KB)</label>
               <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="form-control" />
             </div>
             <div class="form-group">
-              <label>UPI ID (For QR Payment Collection)</label>
-              <input type="text" id="cfg-upi-id" class="form-control" placeholder="username@upi" />
+              <label>UPI ID (For Instant QR Rails)</label>
+              <input type="text" id="cfg-upi-id" class="form-control" placeholder="amutan@upi" />
             </div>
             <div class="form-group">
               <label>Invoice Theme Color</label>
@@ -382,10 +385,41 @@
           </div>
 
           <div class="card">
-            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">EmailJS Dispatch Settings</h3>
+            <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Dedicated Wire Rails (NEFT / RTGS / SWIFT)</h3>
+            <div class="form-group">
+              <label>Bank Name & Branch</label>
+              <input type="text" id="cfg-bank-name" class="form-control" placeholder="HDFC Bank, Anna Nagar Branch" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>Account Number</label>
+                <input type="text" id="cfg-bank-acc" class="form-control" placeholder="50200012345678" />
+              </div>
+              <div class="form-group">
+                <label>Account Holder Name</label>
+                <input type="text" id="cfg-bank-holder" class="form-control" placeholder="Amutan Technologies Pvt Ltd" />
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>IFSC Code (Domestic)</label>
+                <input type="text" id="cfg-bank-ifsc" class="form-control" placeholder="HDFC0001234" />
+              </div>
+              <div class="form-group">
+                <label>SWIFT / BIC (Foreign Remittances)</label>
+                <input type="text" id="cfg-bank-swift" class="form-control" placeholder="HDFCINBBXXX" />
+              </div>
+            </div>
+            <button onclick="saveSettings()" class="btn btn-cyan role-write">Save Banking Rails</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <h3 style="font-size: 14px; margin-bottom: 12px; font-weight: 700;">Automated Dunning Email Configuration (EmailJS)</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
             <div class="form-group">
               <label>EmailJS Public Key</label>
-              <input type="text" id="cfg-emailjs-key" class="form-control" placeholder="public_key" />
+              <input type="text" id="cfg-emailjs-key" class="form-control" placeholder="public_key_xxx" />
             </div>
             <div class="form-group">
               <label>Service ID</label>
@@ -395,43 +429,80 @@
               <label>Template ID</label>
               <input type="text" id="cfg-emailjs-template" class="form-control" placeholder="template_xxx" />
             </div>
-            <button onclick="saveSettings()" class="btn btn-cyan role-write">Save Email Settings</button>
           </div>
+          <button onclick="saveSettings()" class="btn btn-purple role-write">Save Dunning Email Settings</button>
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- PUBLIC READ-ONLY CLIENT PORTAL -->
+  <!-- PUBLIC CLIENT PORTAL & E-SIGNATURE INTERFACE -->
   <div id="portal-screen" class="hidden" style="min-height: 100vh; background: #060913; padding: 24px; display: flex; justify-content: center;">
-    <div style="width: 100%; max-width: 800px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <span style="font-size: 14px; color: var(--cyan); font-weight: 700;">⚡ Instant Invoice Receipt</span>
-        <button onclick="window.print()" class="btn btn-cyan">🖨️ Download PDF</button>
+    <div style="width: 100%; max-width: 860px;">
+      
+      <!-- Top Action Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <span style="font-size: 16px; color: var(--cyan); font-weight: 800;">⚡ Amutan.co Client Sign-Off Portal</span>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Review milestone deliverables, inspect SOW vaults & digitally authorize invoice</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="triggerNativePDF('portal-printable-invoice')" class="btn btn-cyan">📥 Native PDF Download</button>
+          <button onclick="window.print()" class="btn btn-dark">🖨️ Print</button>
+        </div>
       </div>
-      <div id="portal-printable-invoice" style="background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);"></div>
+
+      <!-- Printable Clean Invoice Paper -->
+      <div id="portal-printable-invoice" style="background: #fff; border-radius: 12px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);"></div>
+
+      <!-- Client E-Signature Approval Canvas Box -->
+      <div id="portal-approval-box" style="margin-top: 20px; background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; padding: 24px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px;">✍️ Digital Milestone Sign-Off</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">I hereby acknowledge completion and satisfaction of the milestone deliverables specified in this invoice.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Signatory Full Name</label>
+            <input type="text" id="portal-signer-name" class="form-control" placeholder="e.g. John Doe, VP Engineering" />
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Signatory Email / Designation</label>
+            <input type="text" id="portal-signer-title" class="form-control" placeholder="e.g. john@enterprise.com" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between;">
+            <span>Draw Signature</span>
+            <button onclick="clearSignatureCanvas()" style="background:none; border:none; color:var(--rose); cursor:pointer; font-size:11px;">Clear Canvas</button>
+          </label>
+          <canvas id="sig-canvas"></canvas>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="btn-submit-signoff" onclick="submitClientSignOff()" class="btn btn-emerald" style="padding: 10px 20px; font-size: 13px;">🔒 Approve & Sign Milestone</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- THERMAL RECEIPT CONTAINER -->
-  <div id="thermal-receipt" class="hidden"></div>
-
-  <!-- MODAL: INVOICE BUILDER -->
+  <!-- MODAL: INVOICE & SOW BUILDER -->
   <div id="modal-invoice" class="modal-overlay">
-    <div class="modal-box" style="max-width: 720px;">
+    <div class="modal-box" style="max-width: 780px;">
       <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Generate Direct Bill</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Generate Software / Milestone Invoice</h3>
         <button onclick="closeModal('modal-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
       </div>
       <form onsubmit="saveInvoice(event)">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label>Customer / Party</label>
+            <label>Client Organization</label>
             <select id="inv-cust-id" required class="form-control"></select>
           </div>
           <div class="form-group">
-            <label>Invoice Number</label>
+            <label>Invoice / Milestone #</label>
             <input type="text" id="inv-num" required class="form-control" />
           </div>
           <div class="form-group">
@@ -444,29 +515,44 @@
           </div>
         </div>
 
-        <!-- Quick Item Loader -->
-        <div class="form-group" style="background:#060913; padding:10px; border-radius:6px; border:1px solid var(--card-border);">
-          <label style="color:var(--cyan);">⚡ Fast Add from Inventory (Stock Auto-Linked)</label>
-          <div style="display:flex; gap:8px;">
-            <select id="quick-item-select" class="form-control" style="flex:1;">
-              <option value="">-- Select Catalog Product --</option>
-            </select>
-            <button type="button" onclick="addSelectedCatalogItem()" class="btn btn-cyan">+ Add Line</button>
+        <!-- Project Reference & SOW Section -->
+        <div style="background: #060913; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <label style="font-size: 10px; color: var(--cyan); font-weight: 700; text-transform: uppercase;">Project / Repo Name</label>
+              <input type="text" id="inv-proj-name" class="form-control" placeholder="e.g. NextGen FinTech Portal" />
+            </div>
+            <div>
+              <label style="font-size: 10px; color: var(--cyan); font-weight: 700; text-transform: uppercase;">Client PO / SOW Reference #</label>
+              <input type="text" id="inv-po-ref" class="form-control" placeholder="PO-2026-X88" />
+            </div>
+          </div>
+          
+          <!-- Document Vault Links -->
+          <div>
+            <label style="font-size: 10px; color: var(--amber); font-weight: 700; text-transform: uppercase;">Document Attachment Vault (SOW, NDA, Figma, Jira Links)</label>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <input type="text" id="vault-doc-title" placeholder="Document Title (e.g. SOW Spec v1.2)" class="form-control" style="flex:1;" />
+              <input type="url" id="vault-doc-url" placeholder="https://drive.google.com/..." class="form-control" style="flex:2;" />
+              <button type="button" onclick="addVaultAttachment()" class="btn btn-dark">+ Add</button>
+            </div>
+            <div id="vault-items-list" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;"></div>
           </div>
         </div>
 
+        <!-- Billable Milestone Items -->
         <div style="margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Billable Items (Qty × Rate)</label>
-            <button type="button" onclick="addInvoiceItemRow()" class="btn btn-cyan" style="padding: 4px 10px; font-size: 11px;">➕ Custom Item</button>
+            <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Billable Deliverables / Hours (Qty × Rate)</label>
+            <button type="button" onclick="addInvoiceItemRow()" class="btn btn-cyan" style="padding: 4px 10px; font-size: 11px;">➕ Add Deliverable</button>
           </div>
           <div id="inv-items-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <!-- Discount & Round-off Calculation Grid -->
+        <!-- Discount & Round-off -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
           <div class="form-group">
-            <label>Discount / Concession (₹)</label>
+            <label>Concession / Discount (₹)</label>
             <input type="number" step="any" id="inv-discount" value="0" min="0" oninput="calcInvTotal()" class="form-control" />
           </div>
           <div class="form-group">
@@ -478,160 +564,78 @@
         <div style="background: #060913; border: 1px solid var(--card-border); padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div>
             <span style="font-size: 11px; color: var(--text-muted); display: block;">Items Total: <span id="inv-subtotal-txt">₹0</span> | Less Discount: <span id="inv-discount-txt">₹0</span></span>
-            <span style="font-size: 13px; font-weight: 700; color: #fff;">Final Bill Total:</span>
+            <span style="font-size: 13px; font-weight: 700; color: #fff;">Final Project / Milestone Bill:</span>
           </div>
           <span id="inv-total-txt" style="font-size: 22px; font-weight: 800; color: var(--emerald);">₹0</span>
         </div>
 
-        <!-- Partial Payment / Khata Section -->
+        <!-- Payment Split & Milestone Allocation -->
         <div style="background: #1e293b44; border: 1px dashed var(--card-border); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-          <label style="font-size: 11px; text-transform: uppercase; color: var(--amber); font-weight: 700; display: block; margin-bottom: 8px;">Payment Split & Khata Logging</label>
+          <label style="font-size: 11px; text-transform: uppercase; color: var(--amber); font-weight: 700; display: block; margin-bottom: 8px;">Milestone Payment & Wire Mandate</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
             <div class="form-group" style="margin-bottom:0;">
-              <label>Paid Amount Now (₹)</label>
+              <label>Advance / Collected (₹)</label>
               <input type="number" step="any" id="inv-paid-amt" required oninput="calcKhataDue()" class="form-control" />
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label>Payment Mode</label>
               <select id="inv-paymode" class="form-control">
-                <option value="Cash">Cash</option>
-                <option value="UPI / Online">UPI / Online</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Khata (Credit)">Khata (Credit)</option>
+                <option value="Wire (NEFT/RTGS)">Wire (NEFT/RTGS)</option>
+                <option value="SWIFT (Foreign Wire)">SWIFT (Foreign Wire)</option>
+                <option value="UPI / Online">UPI / Instant QR</option>
+                <option value="Milestone Retainer">Milestone Retainer</option>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label>Balance to Khata (₹)</label>
+              <label>Balance Due on Sign-off (₹)</label>
               <input type="number" id="inv-due-amt" readonly class="form-control" style="font-weight:800; color:var(--amber);" />
             </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Notes / Terms</label>
-          <input type="text" id="inv-note" value="Thank you for your business!" class="form-control" />
+          <label>Scope & Warranty Notes</label>
+          <input type="text" id="inv-note" value="30-day post-deployment bug support included." class="form-control" />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
           <button type="button" onclick="closeModal('modal-invoice')" class="btn btn-dark">Cancel</button>
-          <button type="submit" class="btn btn-cyan">Save Bill & Deduct Stock</button>
+          <button type="submit" class="btn btn-cyan">Save Software Bill</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: KHATA SETTLEMENT -->
-  <div id="modal-settlement" class="modal-overlay">
-    <div class="modal-box" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Record Khata Cash Receipt</h3>
-        <button onclick="closeModal('modal-settlement')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
-      </div>
-      <form onsubmit="saveKhataSettlement(event)">
-        <input type="hidden" id="settle-cust-id" />
-        <div style="background: #060913; padding: 12px; border-radius: 8px; margin-bottom: 14px;">
-          <div style="font-size: 12px; color: var(--text-muted);">Client Name: <strong id="settle-cust-name" style="color: #fff;">-</strong></div>
-          <div style="font-size: 14px; color: var(--amber); font-weight: 800; margin-top: 4px;">Current Outstanding: <span id="settle-current-due">₹0</span></div>
-        </div>
-
-        <div class="form-group">
-          <label>Settlement Date</label>
-          <input type="date" id="settle-date" required class="form-control" />
-        </div>
-        <div class="form-group">
-          <label>Amount Received (₹)</label>
-          <input type="number" step="any" id="settle-amount" required min="1" class="form-control" placeholder="Enter collected amount" />
-        </div>
-        <div class="form-group">
-          <label>Payment Method</label>
-          <select id="settle-paymode" class="form-control">
-            <option value="Cash">Cash</option>
-            <option value="UPI / Online">UPI / Online</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Cheque">Cheque</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Notes / Voucher Reference</label>
-          <input type="text" id="settle-note" placeholder="e.g. Part payment on bill AT-2026-001" class="form-control" />
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
-          <button type="button" onclick="closeModal('modal-settlement')" class="btn btn-dark">Cancel</button>
-          <button type="submit" class="btn btn-emerald">Save & Print Receipt</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: ADD / RESTOCK PRODUCT -->
-  <div id="modal-item" class="modal-overlay">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;" id="item-modal-title">Product / Stock Management</h3>
-        <button onclick="closeModal('modal-item')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
-      </div>
-      <form onsubmit="saveCatalogItem(event)">
-        <input type="hidden" id="item-edit-id" />
-        <div class="form-group">
-          <label>Product / Description Name</label>
-          <input type="text" id="item-name" required class="form-control" placeholder="e.g. Grade A Coconuts / 50kg Copra Bags" />
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label>Default Sale Rate (₹)</label>
-            <input type="number" step="any" id="item-rate" required class="form-control" placeholder="28.50" />
-          </div>
-          <div class="form-group">
-            <label>Unit of Measure</label>
-            <input type="text" id="item-unit" class="form-control" placeholder="Nuts / Bags / Kg" value="Units" />
-          </div>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label>Stock on Hand (Quantity)</label>
-            <input type="number" step="any" id="item-stock" required class="form-control" placeholder="5000" />
-          </div>
-          <div class="form-group">
-            <label>Low Stock Warning Limit</label>
-            <input type="number" step="any" id="item-min-stock" class="form-control" value="100" />
-          </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
-          <button type="button" onclick="closeModal('modal-item')" class="btn btn-dark">Cancel</button>
-          <button type="submit" class="btn btn-cyan">Save to Inventory</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: ADD CUSTOMER -->
+  <!-- MODAL: ADD CLIENT (AUTOMATICALLY CREATES USER ACCOUNT) -->
   <div id="modal-customer" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Add Client / Mandi Account</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Add Enterprise Client (Auto-Generates User Login)</h3>
         <button onclick="closeModal('modal-customer')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
       </div>
       <form onsubmit="saveCustomer(event)">
         <div class="form-group">
-          <label>Company / Party Name</label>
-          <input type="text" id="cust-name" required class="form-control" placeholder="Namakkal Mandi Traders" />
+          <label>Company / Client Name</label>
+          <input type="text" id="cust-name" required class="form-control" placeholder="Acme Technologies Inc." />
         </div>
         <div class="form-group">
-          <label>Email (For Automated Receipts)</label>
-          <input type="email" id="cust-email" class="form-control" placeholder="client@example.com" />
+          <label>Billing Email (For Automated Dunning Escalations)</label>
+          <input type="email" id="cust-email" required class="form-control" placeholder="finance@acme.com" />
         </div>
         <div class="form-group">
-          <label>Phone / WhatsApp (Include Country Code)</label>
-          <input type="text" id="cust-phone" class="form-control" placeholder="919876543210" />
+          <label>Phone / WhatsApp (Used as Login ID & Password)</label>
+          <input type="text" id="cust-phone" required class="form-control" placeholder="919876543210" />
         </div>
         <div class="form-group">
-          <label>Address / Mandi Location</label>
-          <input type="text" id="cust-address" class="form-control" placeholder="Mohanur Road, Namakkal" />
+          <label>Tax / Corporate Address</label>
+          <input type="text" id="cust-address" class="form-control" placeholder="Level 4, Cyber City" />
+        </div>
+        <div style="background:#1e293b; padding:10px; border-radius:6px; margin-bottom:14px; font-size:11px; color:var(--cyan);">
+          💡 <strong>Automatic User Provisioning:</strong> The phone/customer number will become both the <strong>Username</strong> and <strong>Password</strong> with a dedicated Client Viewer role.
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
           <button type="button" onclick="closeModal('modal-customer')" class="btn btn-dark">Cancel</button>
-          <button type="submit" class="btn btn-emerald">Save Customer</button>
+          <button type="submit" class="btn btn-emerald">Save Client & Create Login</button>
         </div>
       </form>
     </div>
@@ -641,34 +645,34 @@
   <div id="modal-expense" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size: 16px; font-weight: 700;">Record Business Expense</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Record Cloud / Dev Expense</h3>
         <button onclick="closeModal('modal-expense')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
       </div>
       <form onsubmit="saveExpense(event)">
         <div class="form-group">
           <label>Title / Description</label>
-          <input type="text" id="exp-title" required class="form-control" placeholder="Diesel / Vehicle Service / Batta" />
+          <input type="text" id="exp-title" required class="form-control" placeholder="AWS Servers / GitHub Enterprise / Contractor" />
         </div>
         <div class="form-group">
           <label>Category</label>
           <select id="exp-cat" class="form-control">
-            <option>Fuel & Diesel</option>
-            <option>Labor & Driver Batta</option>
-            <option>Vehicle Maintenance</option>
-            <option>Rent & Electricity</option>
-            <option>General Overhead</option>
+            <option>AWS / Cloud Hosting</option>
+            <option>Developer & Freelancer Payouts</option>
+            <option>SaaS Tools & API Subscriptions</option>
+            <option>Legal & Accounting</option>
+            <option>General Operational</option>
           </select>
         </div>
         <div class="form-group">
           <label>Amount (₹)</label>
-          <input type="number" id="exp-amt" min="0" step="any" required class="form-control" placeholder="2500" />
+          <input type="number" id="exp-amt" min="0" step="any" required class="form-control" placeholder="15000" />
         </div>
         <div class="form-group">
           <label>Date</label>
           <input type="date" id="exp-date" required class="form-control" />
         </div>
         <div class="form-group">
-          <label>Customer Tag (Optional)</label>
+          <label>Tagged Client (Optional)</label>
           <select id="exp-cust-id" class="form-control"><option value="">General Overhead</option></select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
@@ -681,95 +685,104 @@
 
   <!-- MODAL: INVOICE PREVIEW -->
   <div id="modal-view-invoice" class="modal-overlay">
-    <div class="modal-box" style="max-width: 800px; background: #0f172a;">
+    <div class="modal-box" style="max-width: 860px; background: #0f172a;">
       <div class="modal-header no-print">
-        <h3 style="font-size: 16px; font-weight: 700;">Print Options</h3>
+        <h3 style="font-size: 16px; font-weight: 700;">Invoice & SOW Vault Preview</h3>
         <div style="display: flex; gap: 8px;">
-          <button id="btn-print-a4" class="btn btn-cyan">🖨️ A4 Print</button>
-          <button id="btn-print-thermal" class="btn btn-amber">🧾 Thermal Slip</button>
+          <button onclick="triggerNativePDF('printable-invoice')" class="btn btn-cyan">📥 Native PDF</button>
+          <button id="btn-print-a4" class="btn btn-dark">🖨️ Print Dialog</button>
           <button onclick="closeModal('modal-view-invoice')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
         </div>
       </div>
-      <div id="printable-invoice" style="background: #fff; color: #0f172a; padding: 32px; border-radius: 8px;"></div>
-    </div>
-  </div>
-
-  <!-- MODAL: PAYMENT VOUCHER PREVIEW -->
-  <div id="modal-view-voucher" class="modal-overlay">
-    <div class="modal-box" style="max-width: 600px; background: #0f172a;">
-      <div class="modal-header no-print">
-        <h3 style="font-size: 16px; font-weight: 700;">Payment Voucher</h3>
-        <div style="display: flex; gap: 8px;">
-          <button onclick="window.print()" class="btn btn-emerald">🖨️ Print Voucher</button>
-          <button onclick="closeModal('modal-view-voucher')" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 18px;">✕</button>
-        </div>
-      </div>
-      <div id="voucher-printable" style="background: #fff; color: #0f172a; padding: 24px; border-radius: 8px;"></div>
+      <div id="printable-invoice" style="background: #fff; color: #0f172a; padding: 36px; border-radius: 8px;"></div>
     </div>
   </div>
 
   <script>
-    let authMode = 'login';
+    const DEFAULT_AMUTAN_LOGO = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220"><path d="M70,35 C55,10 120,5 125,40 C135,30 148,45 138,62 C158,70 162,110 135,140 C105,172 50,170 38,135 C30,110 40,85 62,68 C45,65 32,75 28,95 C25,75 35,50 65,48 Z" fill="%23881337"/><path d="M125,50 C140,80 135,125 100,150 C70,165 48,145 42,125 C40,95 75,55 125,50 Z" fill="%23ffffff"/><path d="M78,92 C105,80 132,105 120,135 C100,162 60,140 45,130 C65,115 72,98 78,92 Z" fill="%23b45309"/><ellipse cx="120" cy="72" rx="4" ry="4" fill="%231e293b"/><text x="100" y="195" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-weight="900" font-size="24" fill="%231e293b" text-anchor="middle" letter-spacing="4">AMUTAN</text><text x="100" y="215" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-weight="700" font-size="14" fill="%23475569" text-anchor="middle" letter-spacing="6">GROUP</text></svg>`;
+
     let currentUser = null;
     let userRole = 'Admin';
     let myChart = null;
     let activeDateFilter = 'all';
+    let activePortalInvoiceId = null;
+    let currentVaultAttachments = [];
 
     let registeredUsers = JSON.parse(localStorage.getItem('amutan_users')) || {
       'admin': { password: 'amutan123', role: 'Admin' }
     };
 
     const DEFAULT_DATA = {
-      bizName: 'Kamadhenu Commercial Traders',
-      logoData: '',
-      accentColor: '#0284c7',
-      upiId: 'amutantech@okaxis',
+      bizName: 'Amutan.co',
+      logoData: DEFAULT_AMUTAN_LOGO,
+      accentColor: '#881337',
+      upiId: 'amutan@upi',
+      bankName: 'HDFC Bank, Anna Nagar Main Branch',
+      bankAcc: '50200098765432',
+      bankHolder: 'Amutan Technologies Pvt Ltd',
+      bankIfsc: 'HDFC0000240',
+      bankSwift: 'HDFCINBBXXX',
       emailjsKey: '',
       emailjsService: '',
       emailjsTemplate: '',
-      items: [
-        { id: 'it1', name: 'Grade A Coconuts (தேங்காய்)', rate: 28.5, unit: 'Nuts', stock: 12000, minStock: 1000 },
-        { id: 'it2', name: 'Uli Kai (உழி காய்)', rate: 22.0, unit: 'Nuts', stock: 3500, minStock: 500 },
-        { id: 'it3', name: 'Copra 50kg Gunny Bag', rate: 4200, unit: 'Bags', stock: 45, minStock: 10 }
-      ],
       customers: [
-        { id: 'c1', name: 'Namakkal Wholesale Mandi', email: 'mandi@example.com', phone: '+91 98427 12345', address: 'Mohanur Road, Namakkal' },
-        { id: 'c2', name: 'Selvam Oil Mill', email: 'selvam@example.com', phone: '+91 97891 45678', address: 'Paramathi Velur' }
+        { id: 'c1', name: 'Nexus Cloud Systems', email: 'billing@nexus.io', phone: '9842712345', address: 'Cyber Towers, Hitech City, Hyderabad' },
+        { id: 'c2', name: 'FinScale Ventures UK', email: 'accounts@finscale.co.uk', phone: '9789145678', address: '100 Bishopsgate, London, UK' }
       ],
       invoices: [
         { 
           id: 'inv1', 
-          num: 'BILL-2026-001', 
+          num: 'AMU-2026-001', 
           custId: 'c1', 
-          date: '2026-08-20', 
-          due: '2026-08-27', 
-          payMode: 'Cash', 
+          date: '2026-08-15', 
+          due: '2026-08-20', 
+          projName: 'FinTech Microservices Architecture',
+          poRef: 'PO-NEX-884',
+          payMode: 'Wire (NEFT/RTGS)', 
           status: 'Partial', 
-          note: 'Direct farm pricing', 
-          items: [{ desc: 'Grade A Coconuts (தேங்காய்)', qty: 2000, rate: 28.5, amt: 57000, itemId: 'it1' }], 
+          note: '30 days standard warranty on production deployment.', 
+          items: [
+            { desc: 'Sprint 1 & 2: Backend GraphQL & Microservices API', qty: 1, rate: 85000, amt: 85000 },
+            { desc: 'DevOps: AWS Kubernetes Cluster Setup & CI/CD', qty: 1, rate: 45000, amt: 45000 }
+          ], 
+          vault: [
+            { title: 'Statement of Work (SOW)', url: 'https://github.com' },
+            { title: 'Figma Architecture Blueprint', url: 'https://figma.com' }
+          ],
           discount: 0,
           roundoff: 0,
-          subtotal: 57000,
-          total: 57000,
-          paidAmt: 30000,
-          dueAmt: 27000
+          subtotal: 130000,
+          total: 130000,
+          paidAmt: 65000,
+          dueAmt: 65000,
+          signOff: null,
+          lastDunningDate: null,
+          dunningStage: 'Overdue Notice'
         }
       ],
-      settlements: [
-        { id: 'stl1', date: '2026-08-21', custId: 'c1', amount: 10000, payMode: 'UPI / Online', note: 'Part clearance of BILL-2026-001' }
-      ],
       expenses: [
-        { id: 'e1', title: 'Vehicle Diesel - Bolero Maxi', cat: 'Fuel & Diesel', amt: 3340, date: '2026-08-20', custId: 'c1' }
+        { id: 'e1', title: 'AWS Cloud Infrastructure (EC2 / RDS)', cat: 'AWS / Cloud Hosting', amt: 14200, date: '2026-08-20', custId: 'c1' }
       ]
     };
 
     let appData = JSON.parse(localStorage.getItem('amutan_data')) || DEFAULT_DATA;
+    if (!appData.logoData) appData.logoData = DEFAULT_AMUTAN_LOGO;
+    appData.bizName = 'Amutan.co';
+
+    // Auto-seed registered users from customers if not already mapped
+    (appData.customers || []).forEach(c => {
+      const cleanKey = (c.phone || c.id).replace(/[^a-zA-Z0-9]/g, '');
+      if (!registeredUsers[cleanKey]) {
+        registeredUsers[cleanKey] = { password: cleanKey, role: 'Client' };
+      }
+    });
+    localStorage.setItem('amutan_users', JSON.stringify(registeredUsers));
 
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.innerText = msg;
       t.style.display = 'block';
-      setTimeout(() => { t.style.display = 'none'; }, 3000);
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
 
     function formatINR(val) {
@@ -777,6 +790,8 @@
     }
 
     window.addEventListener('load', () => {
+      document.getElementById('auth-logo-preview').src = appData.logoData || DEFAULT_AMUTAN_LOGO;
+      initCanvas();
       const hash = window.location.hash;
       if (hash.startsWith('#/pay/')) {
         const invId = hash.replace('#/pay/', '');
@@ -786,7 +801,26 @@
       }
     });
 
+    // Native PDF Generator
+    function triggerNativePDF(elementId) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      showToast('Generating Native PDF...');
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `Amutan_Invoice_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save().then(() => {
+        showToast('PDF Downloaded successfully!');
+      });
+    }
+
+    // Portal Logic
     function renderPublicPortal(invId) {
+      activePortalInvoiceId = invId;
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('app-screen').classList.add('hidden');
       document.getElementById('portal-screen').classList.remove('hidden');
@@ -796,10 +830,7 @@
         window.fbGet(checkRef).then((snapshot) => {
           const inv = snapshot.val();
           if (inv) {
-            document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
-              inv, inv.customer, inv.accentColor || '#0284c7', inv.upiId || 'amutantech@okaxis', inv.logoData || '', inv.bizName || 'Commercial Suite'
-            );
-            generateQRCode('portal-qrcode-target', inv.upiId || 'amutantech@okaxis', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
+            displayPortalInvoice(inv);
           } else {
             fallbackLocalPortal(invId);
           }
@@ -812,25 +843,129 @@
     function fallbackLocalPortal(invId) {
       const inv = (appData.invoices || []).find(i => i.id === invId);
       if (inv) {
-        const cust = (appData.customers || []).find(c => c.id === inv.custId);
-        document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(
-          inv, cust, appData.accentColor, appData.upiId, appData.logoData, appData.bizName
-        );
-        generateQRCode('portal-qrcode-target', appData.upiId, inv.dueAmt > 0 ? inv.dueAmt : inv.total);
+        displayPortalInvoice(inv);
       } else {
         document.getElementById('portal-printable-invoice').innerHTML = `<h2 style="color:#f43f5e; text-align:center;">Invoice Not Found or Expired.</h2>`;
+        document.getElementById('portal-approval-box').classList.add('hidden');
       }
     }
 
-    function toggleAuthMode(m) {
-      authMode = m;
-      document.getElementById('auth-tab-login').className = m === 'login' ? 'btn btn-cyan' : 'btn btn-dark';
-      document.getElementById('auth-tab-signup').className = m === 'signup' ? 'btn btn-cyan' : 'btn btn-dark';
-      document.getElementById('auth-submit-btn').innerText = m === 'login' ? 'Sign In' : 'Register Account';
-      document.getElementById('auth-role-group').classList.toggle('hidden', m === 'login');
-      document.getElementById('auth-err').classList.add('hidden');
+    function displayPortalInvoice(inv) {
+      const cust = inv.customer || (appData.customers || []).find(c => c.id === inv.custId);
+      document.getElementById('portal-printable-invoice').innerHTML = generateInvoiceHTML(inv, cust, appData);
+      generateQRCode('portal-qrcode-target', inv.upiId || appData.upiId || 'amutan@upi', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
+      
+      const approvalBox = document.getElementById('portal-approval-box');
+      if (inv.signOff) {
+        approvalBox.innerHTML = `
+          <div style="background:#064e3b; border:1px solid #059669; border-radius:8px; padding:16px; text-align:center; color:#34d399;">
+            <h4 style="font-size:15px; font-weight:800;">✅ Deliverables Approved & Digitally Signed</h4>
+            <p style="font-size:12px; margin-top:4px;">Signed by: <strong>${inv.signOff.name}</strong> (${inv.signOff.title}) on <em>${inv.signOff.timestamp}</em></p>
+          </div>
+        `;
+      } else {
+        approvalBox.classList.remove('hidden');
+      }
     }
 
+    // Canvas Signature
+    let isDrawing = false;
+    let canvas, ctx;
+
+    function initCanvas() {
+      canvas = document.getElementById('sig-canvas');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+      resizeCanvas();
+
+      canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+      canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+      window.addEventListener('mouseup', () => { isDrawing = false; });
+
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        isDrawing = true;
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      });
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+      });
+      canvas.addEventListener('touchend', () => { isDrawing = false; });
+    }
+
+    function clearSignatureCanvas() {
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    async function submitClientSignOff() {
+      const name = document.getElementById('portal-signer-name').value.trim();
+      const title = document.getElementById('portal-signer-title').value.trim();
+      if (!name) { alert('Please enter your full name as the authorized signatory.'); return; }
+      if (!canvas) return;
+
+      const signatureData = canvas.toDataURL('image/png');
+      const signOffPayload = {
+        name,
+        title: title || 'Authorized Signatory',
+        signature: signatureData,
+        timestamp: new Date().toLocaleString()
+      };
+
+      const inv = (appData.invoices || []).find(i => i.id === activePortalInvoiceId);
+      if (inv) {
+        inv.signOff = signOffPayload;
+        persist();
+      }
+
+      if (window.fbDb && window.fbRef && window.fbSet && activePortalInvoiceId) {
+        await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${activePortalInvoiceId}/signOff`), signOffPayload);
+      }
+
+      showToast('Milestone Digitally Approved & Locked!');
+      renderPublicPortal(activePortalInvoiceId);
+    }
+
+    function addVaultAttachment() {
+      const title = document.getElementById('vault-doc-title').value.trim();
+      const url = document.getElementById('vault-doc-url').value.trim();
+      if (!title || !url) { alert('Enter both document title and valid URL'); return; }
+      
+      currentVaultAttachments.push({ title, url });
+      document.getElementById('vault-doc-title').value = '';
+      document.getElementById('vault-doc-url').value = '';
+      renderVaultPills();
+    }
+
+    function renderVaultPills() {
+      const list = document.getElementById('vault-items-list');
+      list.innerHTML = currentVaultAttachments.map((doc, idx) => `
+        <span style="background:#1e293b; border:1px solid #334155; padding:4px 8px; border-radius:4px; font-size:11px; display:inline-flex; align-items:center; gap:6px;">
+          📎 ${doc.title}
+          <button type="button" onclick="currentVaultAttachments.splice(${idx},1); renderVaultPills();" style="background:none; border:none; color:var(--rose); cursor:pointer;">✕</button>
+        </span>
+      `).join('');
+    }
+
+    // LOGIN AUTHENTICATION HANDLER
     function handleAuthSubmit(e) {
       e.preventDefault();
       const u = document.getElementById('auth-username').value.trim();
@@ -838,30 +973,14 @@
       const errEl = document.getElementById('auth-err');
       errEl.classList.add('hidden');
 
-      if (authMode === 'login') {
-        if (registeredUsers[u] && registeredUsers[u].password === p) {
-          currentUser = u;
-          userRole = registeredUsers[u].role || 'Admin';
-          localStorage.setItem('amutan_current_user', u);
-          checkAuth();
-        } else {
-          errEl.innerText = 'Invalid username or password.';
-          errEl.classList.remove('hidden');
-        }
-      } else {
-        if (registeredUsers[u]) {
-          errEl.innerText = 'Username already exists.';
-          errEl.classList.remove('hidden');
-          return;
-        }
-        const r = document.getElementById('auth-role').value;
-        registeredUsers[u] = { password: p, role: r };
-        localStorage.setItem('amutan_users', JSON.stringify(registeredUsers));
+      if (registeredUsers[u] && registeredUsers[u].password === p) {
         currentUser = u;
-        userRole = r;
+        userRole = registeredUsers[u].role || 'Admin';
         localStorage.setItem('amutan_current_user', u);
-        showToast('Account registered successfully!');
         checkAuth();
+      } else {
+        errEl.innerText = 'Invalid username/customer ID or password.';
+        errEl.classList.remove('hidden');
       }
     }
 
@@ -892,12 +1011,13 @@
     function enforceRBAC() {
       const writeElements = document.querySelectorAll('.role-write');
       writeElements.forEach(el => {
-        el.style.display = (userRole === 'Viewer') ? 'none' : '';
+        el.style.display = (userRole === 'Viewer' || userRole === 'Client') ? 'none' : '';
       });
     }
 
     function persist() {
       localStorage.setItem('amutan_data', JSON.stringify(appData));
+      localStorage.setItem('amutan_users', JSON.stringify(registeredUsers));
       if (window.fbDb && window.fbRef && window.fbSet && currentUser) {
         window.fbSet(window.fbRef(window.fbDb, `org_data/${currentUser}`), appData).catch(e => console.log('Sync error:', e.message));
       }
@@ -951,14 +1071,20 @@
 
       let invoices = appData.invoices || [];
       let expenses = appData.expenses || [];
-      let settlements = appData.settlements || [];
+
+      // Filter by Client Role if signed in as Client
+      if (userRole === 'Client') {
+        const matchingCust = (appData.customers || []).find(c => (c.phone === currentUser || c.id === currentUser));
+        if (matchingCust) {
+          invoices = invoices.filter(i => i.custId === matchingCust.id);
+        }
+      }
 
       if (from && to) {
         invoices = invoices.filter(i => i.date >= from && i.date <= to);
         expenses = expenses.filter(e => e.date >= from && e.date <= to);
-        settlements = settlements.filter(s => s.date >= from && s.date <= to);
       }
-      return { invoices, expenses, settlements };
+      return { invoices, expenses };
     }
 
     function handleLogoUpload(e) {
@@ -974,13 +1100,13 @@
       reader.onload = function(evt) {
         appData.logoData = evt.target.result;
         persist();
-        showToast('Company logo updated and synced!');
+        showToast('Brand logo updated and synced!');
       };
       reader.readAsDataURL(file);
     }
 
     function switchTab(t) {
-      ['dashboard', 'invoices', 'customers', 'stock', 'expenses', 'settings'].forEach(tab => {
+      ['dashboard', 'invoices', 'dunning', 'customers', 'expenses', 'settings'].forEach(tab => {
         const el = document.getElementById('tab-' + tab);
         const btn = document.getElementById('tab-btn-' + tab);
         if (el) el.classList.add('hidden');
@@ -994,43 +1120,114 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function render() {
-      const img = document.getElementById('sidebar-logo-img');
-      const txt = document.getElementById('sidebar-logo-txt');
-      if (appData.logoData) {
-        img.src = appData.logoData;
-        img.classList.remove('hidden');
-        txt.classList.add('hidden');
+    // DUNNING ESCALATION CALCULATOR
+    function getDunningStage(dueDateStr, dueAmt) {
+      if (dueAmt <= 0) return { stage: 'Settled', badgeClass: 'badge-paid', urgency: 'None' };
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const due = new Date(dueDateStr);
+      due.setHours(0,0,0,0);
+
+      const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 3) {
+        return { stage: `Upcoming (${diffDays}d left)`, badgeClass: 'badge-dunning-upcoming', urgency: 'Upcoming' };
+      } else if (diffDays >= 1 && diffDays <= 3) {
+        return { stage: `T-${diffDays} Days Advance Notice`, badgeClass: 'badge-dunning-upcoming', urgency: '3_DAYS_BEFORE' };
+      } else if (diffDays === 0) {
+        return { stage: `Due Today (Immediate Notice)`, badgeClass: 'badge-dunning-today', urgency: 'DUE_TODAY' };
       } else {
-        img.classList.add('hidden');
-        txt.classList.remove('hidden');
+        return { stage: `Overdue by ${Math.abs(diffDays)} Days (Escalated)`, badgeClass: 'badge-dunning-overdue', urgency: 'OVERDUE' };
+      }
+    }
+
+    function runDunningBatch() {
+      const pendingInvoices = (appData.invoices || []).filter(i => i.dueAmt > 0);
+      let count = 0;
+      pendingInvoices.forEach(inv => {
+        const dunning = getDunningStage(inv.due, inv.dueAmt);
+        if (dunning.urgency !== 'None') {
+          inv.dunningStage = dunning.stage;
+          count++;
+        }
+      });
+      persist();
+      showToast(`Dunning Scan Complete: ${count} Active follow-ups scheduled.`);
+    }
+
+    function dispatchDunningEscalation(invId, channel = 'whatsapp') {
+      const inv = (appData.invoices || []).find(i => i.id === invId);
+      const cust = (appData.customers || []).find(c => c.id === inv.custId);
+      if (!inv || !cust) return;
+
+      const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${inv.id}`;
+      const dunning = getDunningStage(inv.due, inv.dueAmt);
+
+      let msg = '';
+      if (dunning.urgency === '3_DAYS_BEFORE') {
+        msg = `⏰ *Upcoming Milestone Due Reminder* - Amutan.co\n\nDear ${cust.name},\nThis is a friendly reminder that invoice *#${inv.num}* for *${formatINR(inv.dueAmt)}* is due on *${inv.due}*.\n\nProject: ${inv.projName || 'Software SOW'}\nPortal & Wire Details: ${portalUrl}\n\nThank you!`;
+      } else if (dunning.urgency === 'DUE_TODAY') {
+        msg = `🚨 *Payment Due Today* - Amutan.co\n\nDear ${cust.name},\nInvoice *#${inv.num}* for *${formatINR(inv.dueAmt)}* is due for settlement today (*${inv.due}*).\n\nKindly authorize the transfer or sign the milestone:\n${portalUrl}\n\nBank / UPI info attached on portal.`;
+      } else if (dunning.urgency === 'OVERDUE') {
+        msg = `⚠️ *URGENT OVERDUE NOTICE* - Amutan.co\n\nDear ${cust.name},\nInvoice *#${inv.num}* with an outstanding balance of *${formatINR(inv.dueAmt)}* was due on *${inv.due}* and is now overdue.\n\nPlease process this milestone clearance immediately:\n${portalUrl}\n\nFor questions, contact finance@amutan.co.`;
+      } else {
+        msg = `Hello ${cust.name},\nRegarding invoice *#${inv.num}* for *${formatINR(inv.dueAmt)}* (Due: ${inv.due}):\n${portalUrl}`;
       }
 
-      document.getElementById('cfg-biz-name').value = appData.bizName || 'Kamadhenu Commercial Traders';
+      if (channel === 'whatsapp') {
+        const cleanPhone = (cust.phone || '').replace(/[^0-9]/g, '');
+        if (!cleanPhone) { alert('Valid phone number missing for client.'); return; }
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+      } else if (channel === 'email') {
+        if (window.emailjs && appData.emailjsKey && appData.emailjsService && appData.emailjsTemplate) {
+          window.emailjs.init(appData.emailjsKey);
+          window.emailjs.send(appData.emailjsService, appData.emailjsTemplate, {
+            to_email: cust.email,
+            client_name: cust.name,
+            invoice_num: inv.num,
+            amount_due: formatINR(inv.dueAmt),
+            due_date: inv.due,
+            portal_url: portalUrl,
+            message: msg
+          }).then(() => showToast(`Dunning Email Dispatched to ${cust.email}`))
+            .catch(err => alert('EmailJS Error: ' + err.text));
+        } else {
+          // Mailto fallback
+          window.open(`mailto:${cust.email}?subject=${encodeURIComponent(`Payment Notice: ${inv.num} - Amutan.co`)}&body=${encodeURIComponent(msg)}`);
+        }
+      }
+
+      inv.lastDunningDate = new Date().toISOString().split('T')[0];
+      persist();
+    }
+
+    function render() {
+      const logoSrc = appData.logoData || DEFAULT_AMUTAN_LOGO;
+      document.getElementById('sidebar-logo-img').src = logoSrc;
+      document.getElementById('auth-logo-preview').src = logoSrc;
+
+      document.getElementById('cfg-biz-name').value = appData.bizName || 'Amutan.co';
+      document.getElementById('cfg-upi-id').value = appData.upiId || 'amutan@upi';
+      document.getElementById('cfg-accent').value = appData.accentColor || '#881337';
+      document.getElementById('cfg-bank-name').value = appData.bankName || '';
+      document.getElementById('cfg-bank-acc').value = appData.bankAcc || '';
+      document.getElementById('cfg-bank-holder').value = appData.bankHolder || '';
+      document.getElementById('cfg-bank-ifsc').value = appData.bankIfsc || '';
+      document.getElementById('cfg-bank-swift').value = appData.bankSwift || '';
       document.getElementById('cfg-emailjs-key').value = appData.emailjsKey || '';
       document.getElementById('cfg-emailjs-service').value = appData.emailjsService || '';
       document.getElementById('cfg-emailjs-template').value = appData.emailjsTemplate || '';
-      document.getElementById('cfg-upi-id').value = appData.upiId || 'amutantech@okaxis';
-      document.getElementById('cfg-accent').value = appData.accentColor || '#0284c7';
 
-      const { invoices, expenses, settlements } = getFilteredData();
+      const { invoices, expenses } = getFilteredData();
 
       const totalBilled = invoices.reduce((a, b) => a + Number(b.total || 0), 0);
-      const invoiceCashPaid = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
-      const settlementCashPaid = settlements.reduce((a, b) => a + Number(b.amount || 0), 0);
-      const totalCashCollected = invoiceCashPaid + settlementCashPaid;
-
-      // Calculate All-Time Khata Receivables
-      const allBilled = (appData.invoices || []).reduce((a, b) => a + Number(b.total || 0), 0);
-      const allInvPaid = (appData.invoices || []).reduce((a, b) => a + Number(b.paidAmt || 0), 0);
-      const allSettlePaid = (appData.settlements || []).reduce((a, b) => a + Number(b.amount || 0), 0);
-      const totalOutstandingKhata = Math.max(0, allBilled - (allInvPaid + allSettlePaid));
-
+      const totalCashCollected = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
+      const totalOutstanding = (appData.invoices || []).reduce((a, b) => a + Number(b.dueAmt || 0), 0);
       const totalExpenses = expenses.reduce((a, b) => a + Number(b.amt || 0), 0);
 
       document.getElementById('stat-rev').innerText = formatINR(totalBilled);
       document.getElementById('stat-paid').innerText = formatINR(totalCashCollected);
-      document.getElementById('stat-due').innerText = formatINR(totalOutstandingKhata);
+      document.getElementById('stat-due').innerText = formatINR(totalOutstanding);
       document.getElementById('stat-exp').innerText = formatINR(totalExpenses);
 
       // Dashboard Recent Bills
@@ -1038,7 +1235,7 @@
         const cust = (appData.customers || []).find(c => c.id === i.custId) || { name: 'Client' };
         return `
           <div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid #1e293b;">
-            <span><strong>${i.num}</strong> (${cust.name})</span>
+            <span><strong>${i.num}</strong> (${cust.name}) - <small style="color:var(--cyan);">${i.projName || 'Project'}</small></span>
             <div>
               <span style="color:var(--emerald); font-weight:700;">${formatINR(i.total)}</span>
               ${i.dueAmt > 0 ? `<small style="color:var(--amber); display:block; text-align:right;">Due: ${formatINR(i.dueAmt)}</small>` : ''}
@@ -1047,18 +1244,9 @@
         `;
       }).join('') || '<div style="font-size:12px; color:var(--text-muted);">No records for selected period.</div>';
 
-      // Dashboard Stock Alerts
-      const lowStockItems = (appData.items || []).filter(it => it.stock <= (it.minStock || 100));
-      document.getElementById('dash-stock-alerts').innerHTML = lowStockItems.map(it => `
-        <div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid #1e293b;">
-          <span style="color:var(--rose); font-weight:700;">⚠️ ${it.name}</span>
-          <span style="color:var(--rose); font-weight:800;">${it.stock} ${it.unit} Left</span>
-        </div>
-      `).join('') || '<div style="font-size:12px; color:var(--emerald); font-weight:600;">✅ All stock levels are sufficient.</div>';
-
       renderInvoicesTable();
+      renderDunningTable();
       renderCustomersTable();
-      renderStockTable();
       renderExpensesTable();
       populateDropdowns();
       renderChart();
@@ -1067,17 +1255,17 @@
     function renderChart() {
       const ctx = document.getElementById('financeChart');
       if (!ctx) return;
-      const { invoices, expenses, settlements } = getFilteredData();
+      const { invoices, expenses } = getFilteredData();
       
       const billed = invoices.reduce((a, b) => a + Number(b.total || 0), 0);
-      const paid = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0) + settlements.reduce((a, b) => a + Number(b.amount || 0), 0);
+      const paid = invoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
       const exp = expenses.reduce((a, b) => a + Number(b.amt || 0), 0);
 
       if (myChart) myChart.destroy();
       myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Gross Invoiced', 'Collected Cash', 'Operating Expenses'],
+          labels: ['Gross Invoiced', 'Collected Advance/Cash', 'Cloud & Dev Ops'],
           datasets: [{
             data: [billed, paid, exp],
             backgroundColor: ['#06b6d4', '#10b981', '#f43f5e'],
@@ -1106,66 +1294,75 @@
 
         return `
           <tr>
-            <td><strong>${i.num}</strong></td>
+            <td><strong>${i.num}</strong><br/><small style="color:var(--cyan);">${i.projName || 'Milestone'}</small></td>
             <td>${c.name}</td>
-            <td>${i.date}</td>
+            <td><span class="badge ${badgeClass}">${i.status}</span></td>
             <td style="font-weight:700;">${formatINR(i.total)}</td>
             <td style="color:var(--emerald); font-weight:700;">${formatINR(i.paidAmt || 0)}</td>
             <td style="color:${i.dueAmt > 0 ? 'var(--amber)' : 'var(--emerald)'}; font-weight:800;">${formatINR(i.dueAmt || 0)}</td>
-            <td><span class="badge ${badgeClass}">${i.status}</span></td>
+            <td>
+              ${i.signOff ? `<span class="badge badge-signed">✓ Signed (${i.signOff.name})</span>` : `<span style="font-size:11px; color:var(--text-muted);">Pending</span>`}
+            </td>
             <td style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
-              <button onclick="sendWhatsAppReminder('${i.id}')" class="btn btn-wa" title="WhatsApp Reminder">💬 WA</button>
-              <button onclick="copyClientPortalLink('${i.id}')" class="btn btn-dark" title="Copy Public URL">🔗 Link</button>
+              <button onclick="dispatchDunningEscalation('${i.id}', 'whatsapp')" class="btn btn-wa" title="WhatsApp Escalation">💬 WA</button>
+              <button onclick="copyClientPortalLink('${i.id}')" class="btn btn-dark" title="Copy Sign-Off Portal URL">🔗 Portal</button>
               <button onclick="previewInvoice('${i.id}')" class="btn btn-cyan">View</button>
-              ${userRole !== 'Viewer' ? `<button onclick="deleteInv('${i.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:4px;">🗑</button>` : ''}
+              ${(userRole !== 'Viewer' && userRole !== 'Client') ? `<button onclick="deleteInv('${i.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:4px;">🗑</button>` : ''}
             </td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No invoices found for this range.</td></tr>';
     }
 
+    function renderDunningTable() {
+      const pendingInvoices = (appData.invoices || []).filter(i => i.dueAmt > 0);
+      document.getElementById('dunning-tbody').innerHTML = pendingInvoices.map(i => {
+        const c = appData.customers.find(cust => cust.id === i.custId) || { name: '—', phone: '', email: '' };
+        const dunning = getDunningStage(i.due, i.dueAmt);
+
+        return `
+          <tr>
+            <td><strong>${i.num}</strong><br/><small style="color:var(--cyan);">${i.projName || 'Project'}</small></td>
+            <td><strong>${c.name}</strong><br/><small style="color:var(--text-muted);">${c.email} • ${c.phone}</small></td>
+            <td>${i.due}</td>
+            <td style="color:var(--amber); font-weight:800; font-size:14px;">${formatINR(i.dueAmt)}</td>
+            <td><span class="badge ${dunning.badgeClass}">${dunning.stage}</span></td>
+            <td><span style="font-size:11px; color:var(--text-muted);">${i.lastDunningDate ? 'Sent: ' + i.lastDunningDate : 'Not Triggered Yet'}</span></td>
+            <td style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+              <button onclick="dispatchDunningEscalation('${i.id}', 'whatsapp')" class="btn btn-wa" title="Instant WA Follow-up">💬 WhatsApp</button>
+              <button onclick="dispatchDunningEscalation('${i.id}', 'email')" class="btn btn-purple" title="Email Dunning Notice">✉️ Email</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="7" style="text-align:center; color:var(--emerald); font-weight:600; padding:20px;">✅ All client accounts are fully settled. No overdue notices pending.</td></tr>';
+    }
+
     function renderCustomersTable() {
       document.getElementById('customers-tbody').innerHTML = (appData.customers || []).map(c => {
         const custInvoices = (appData.invoices || []).filter(i => i.custId === c.id);
         const totalBilled = custInvoices.reduce((a, b) => a + Number(b.total || 0), 0);
-        const invPaid = custInvoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
-        const settlePaid = (appData.settlements || []).filter(s => s.custId === c.id).reduce((a, b) => a + Number(b.amount || 0), 0);
-        const totalPaid = invPaid + settlePaid;
+        const totalPaid = custInvoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
         const balanceDue = Math.max(0, totalBilled - totalPaid);
+        const cleanLogin = (c.phone || c.id).replace(/[^a-zA-Z0-9]/g, '');
 
         return `
           <tr>
             <td><strong>${c.name}</strong><br><small style="color:var(--text-muted);">${c.address || '—'}</small></td>
             <td>${c.phone || '—'}<br><small style="color:var(--text-muted);">${c.email || '—'}</small></td>
+            <td>
+              <span style="font-family:monospace; background:#1e293b; padding:3px 6px; border-radius:4px; font-size:12px; color:var(--cyan);">
+                User: <strong>${cleanLogin}</strong> | Pass: <strong>${cleanLogin}</strong>
+              </span>
+            </td>
             <td style="font-weight:700;">${formatINR(totalBilled)}</td>
             <td style="color:var(--emerald); font-weight:700;">${formatINR(totalPaid)}</td>
             <td style="color:${balanceDue > 0 ? 'var(--amber)' : 'var(--emerald)'}; font-weight:800; font-size:14px;">${formatINR(balanceDue)}</td>
             <td style="text-align:right;">
-              ${balanceDue > 0 ? `<button onclick="openKhataSettlementModal('${c.id}')" class="btn btn-amber role-write">💵 Settle Khata</button>` : `<span style="color:var(--emerald); font-size:11px; font-weight:700;">Cleared ✓</span>`}
-              ${userRole !== 'Viewer' ? `<button onclick="deleteCustomer('${c.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:8px;">🗑</button>` : ''}
+              ${(userRole !== 'Viewer' && userRole !== 'Client') ? `<button onclick="deleteCustomer('${c.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:8px;">🗑</button>` : ''}
             </td>
           </tr>
         `;
       }).join('');
-    }
-
-    function renderStockTable() {
-      document.getElementById('stock-tbody').innerHTML = (appData.items || []).map(item => {
-        const isLow = item.stock <= (item.minStock || 100);
-        return `
-          <tr>
-            <td><strong>${item.name}</strong></td>
-            <td style="color:var(--emerald); font-weight:700;">${formatINR(item.rate)} / ${item.unit}</td>
-            <td style="font-weight:800; font-size:14px; color:${isLow ? 'var(--rose)' : '#fff'};">${item.stock.toLocaleString()} ${item.unit}</td>
-            <td style="color:var(--text-muted);">${item.minStock || 100} ${item.unit}</td>
-            <td><span class="badge ${isLow ? 'badge-pending' : 'badge-paid'}">${isLow ? 'LOW STOCK' : 'IN STOCK'}</span></td>
-            <td style="text-align:right;">
-              <button onclick="openQuickRestockModal('${item.id}')" class="btn btn-dark btn-sm role-write">➕ Restock</button>
-              ${userRole !== 'Viewer' ? `<button onclick="deleteCatalogItem('${item.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer; margin-left:6px;">🗑</button>` : ''}
-            </td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No catalog items defined.</td></tr>';
     }
 
     function renderExpensesTable() {
@@ -1180,7 +1377,7 @@
             <td>${c.name}</td>
             <td style="color:var(--rose); font-weight:700;">${formatINR(e.amt)}</td>
             <td style="text-align:right;">
-              ${userRole !== 'Viewer' ? `<button onclick="deleteExpense('${e.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer;">🗑</button>` : ''}
+              ${(userRole !== 'Viewer' && userRole !== 'Client') ? `<button onclick="deleteExpense('${e.id}')" style="background:none; border:none; color:var(--rose); cursor:pointer;">🗑</button>` : ''}
             </td>
           </tr>
         `;
@@ -1190,83 +1387,59 @@
     function populateDropdowns() {
       const invC = document.getElementById('inv-cust-id');
       const expC = document.getElementById('exp-cust-id');
-      const qSelect = document.getElementById('quick-item-select');
 
       if (invC) invC.innerHTML = (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
       if (expC) expC.innerHTML = '<option value="">General Overhead</option>' + (appData.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-      if (qSelect) qSelect.innerHTML = '<option value="">-- Select Catalog Product --</option>' + (appData.items || []).map(it => `<option value="${it.id}">${it.name} (₹${it.rate}/${it.unit}) - [Stock: ${it.stock}]</option>`).join('');
     }
 
     function exportInvoicesCSV() {
-      let csv = 'Invoice Number,Client,Date,Due Date,Total Amount,Paid Amount,Khata Balance,Status\n';
+      let csv = 'Invoice Number,Project Name,Client,Date,Total Amount,Paid Amount,Khata Balance,Status,Signed By\n';
       (appData.invoices || []).forEach(i => {
         const c = appData.customers.find(cust => cust.id === i.custId) || { name: 'Client' };
-        csv += `"${i.num}","${c.name}","${i.date}","${i.due}",${i.total},${i.paidAmt || 0},${i.dueAmt || 0},"${i.status}"\n`;
+        csv += `"${i.num}","${i.projName || ''}","${c.name}","${i.date}",${i.total},${i.paidAmt || 0},${i.dueAmt || 0},"${i.status}","${i.signOff ? i.signOff.name : 'Unsigned'}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', `Commercial_Bills_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute('download', `Amutan_Software_Bills_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    function sendWhatsAppReminder(invId) {
-      const inv = appData.invoices.find(i => i.id === invId);
-      const cust = appData.customers.find(c => c.id === inv.custId);
-      if (!cust || !cust.phone) { alert('Please configure a valid phone number for this client!'); return; }
-
-      const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${inv.id}`;
-      const msg = `Hello ${cust.name},\n\nYour commercial bill *#${inv.num}* for *${formatINR(inv.total)}* is available from ${appData.bizName || 'Kamadhenu Traders'}.\n\n*Paid:* ${formatINR(inv.paidAmt)}\n*Balance Due:* ${formatINR(inv.dueAmt)}\n*Pay via UPI & View Bill:* ${portalUrl}\n\nThank you!`;
-      
-      const cleanPhone = cust.phone.replace(/[^0-9]/g, '');
-      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
     function copyClientPortalLink(invId) {
       const portalUrl = `${window.location.origin}${window.location.pathname}#/pay/${invId}`;
       navigator.clipboard.writeText(portalUrl);
-      showToast('Client Portal Link Copied to Clipboard!');
+      showToast('Client Sign-Off Portal URL Copied!');
     }
 
     function openInvoiceModal() {
-      if (!appData.customers.length) { alert('Create a customer first!'); openCustomerModal(); return; }
-      document.getElementById('inv-num').value = 'BILL-' + new Date().getFullYear() + '-' + String((appData.invoices || []).length + 1).padStart(3, '0');
+      if (!appData.customers.length) { alert('Create a client first!'); openCustomerModal(); return; }
+      document.getElementById('inv-num').value = 'AMU-' + new Date().getFullYear() + '-' + String((appData.invoices || []).length + 1).padStart(3, '0');
       document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
       const d = new Date(); d.setDate(d.getDate() + 7);
       document.getElementById('inv-due').value = d.toISOString().split('T')[0];
       document.getElementById('inv-items-container').innerHTML = '';
       document.getElementById('inv-discount').value = 0;
       document.getElementById('inv-roundoff').value = 0;
+      document.getElementById('inv-proj-name').value = '';
+      document.getElementById('inv-po-ref').value = '';
+      currentVaultAttachments = [];
+      renderVaultPills();
       
-      if (appData.items && appData.items.length > 0) {
-        addInvoiceItemRow(appData.items[0].name, 1, appData.items[0].rate, appData.items[0].id);
-      } else {
-        addInvoiceItemRow('Item Description', 1, 1000, '');
-      }
+      addInvoiceItemRow('Sprint Milestone / Cloud Architecture', 1, 50000);
       openModal('modal-invoice');
     }
 
-    function addSelectedCatalogItem() {
-      const id = document.getElementById('quick-item-select').value;
-      if (!id) return;
-      const it = (appData.items || []).find(x => x.id === id);
-      if (it) {
-        addInvoiceItemRow(it.name, 1, it.rate, it.id);
-      }
-    }
-
-    function addInvoiceItemRow(desc = '', qty = 1, rate = 0, itemId = '') {
+    function addInvoiceItemRow(desc = '', qty = 1, rate = 0) {
       const c = document.getElementById('inv-items-container');
       const id = 'row_' + Date.now() + Math.random().toString(36).substr(2, 3);
       const div = document.createElement('div');
       div.id = id;
       div.style.cssText = 'display:flex; gap:6px; align-items:center;';
       div.innerHTML = `
-        <input type="hidden" class="item-link-id" value="${itemId}" />
-        <input type="text" value="${desc}" placeholder="Product / Description" class="form-control item-desc" required style="flex:2;" />
-        <input type="number" value="${qty}" min="0.01" step="any" placeholder="Qty" oninput="calcInvTotal()" class="form-control item-qty" required style="width:80px; text-align:center;" />
+        <input type="text" value="${desc}" placeholder="Deliverable / Service Description" class="form-control item-desc" required style="flex:2;" />
+        <input type="number" value="${qty}" min="0.01" step="any" placeholder="Hours/Milestone" oninput="calcInvTotal()" class="form-control item-qty" required style="width:80px; text-align:center;" />
         <input type="number" value="${rate}" min="0" step="any" placeholder="Rate" oninput="calcInvTotal()" class="form-control item-rate" required style="width:110px; text-align:right;" />
         <button type="button" onclick="document.getElementById('${id}').remove(); calcInvTotal();" style="background:none; border:none; color:var(--rose); cursor:pointer;">✕</button>
       `;
@@ -1313,7 +1486,6 @@
       const descs = document.querySelectorAll('.item-desc');
       const qtys = document.querySelectorAll('.item-qty');
       const rates = document.querySelectorAll('.item-rate');
-      const itemIds = document.querySelectorAll('.item-link-id');
       const items = [];
       let subtotal = 0;
 
@@ -1321,19 +1493,10 @@
         const d = descs[i].value.trim();
         const q = Number(qtys[i].value || 1);
         const r = Number(rates[i].value || 0);
-        const lId = itemIds[i].value;
         const sub = q * r;
         if (d) { 
-          items.push({ desc: d, qty: q, rate: r, amt: sub, itemId: lId }); 
+          items.push({ desc: d, qty: q, rate: r, amt: sub }); 
           subtotal += sub; 
-
-          // Stock Auto-Deduction Logic
-          if (lId) {
-            const catalogItem = (appData.items || []).find(it => it.id === lId);
-            if (catalogItem) {
-              catalogItem.stock = Math.max(0, catalogItem.stock - q);
-            }
-          }
         }
       }
 
@@ -1357,8 +1520,11 @@
         custId: custId,
         date: document.getElementById('inv-date').value,
         due: document.getElementById('inv-due').value,
+        projName: document.getElementById('inv-proj-name').value.trim(),
+        poRef: document.getElementById('inv-po-ref').value.trim(),
         payMode: document.getElementById('inv-paymode').value,
         note: document.getElementById('inv-note').value.trim(),
+        vault: [...currentVaultAttachments],
         status,
         items,
         subtotal,
@@ -1366,7 +1532,9 @@
         roundoff: roff,
         total,
         paidAmt,
-        dueAmt
+        dueAmt,
+        signOff: null,
+        lastDunningDate: null
       };
 
       if (!appData.invoices) appData.invoices = [];
@@ -1377,139 +1545,20 @@
         await window.fbSet(window.fbRef(window.fbDb, `public_invoices/${inv.id}`), {
           ...inv,
           customer: cust,
-          accentColor: appData.accentColor || '#0284c7',
-          upiId: appData.upiId || 'amutantech@okaxis',
-          logoData: appData.logoData || '',
-          bizName: appData.bizName || 'Kamadhenu Traders'
+          accentColor: appData.accentColor || '#881337',
+          upiId: appData.upiId || 'amutan@upi',
+          bankName: appData.bankName || '',
+          bankAcc: appData.bankAcc || '',
+          bankHolder: appData.bankHolder || '',
+          bankIfsc: appData.bankIfsc || '',
+          bankSwift: appData.bankSwift || '',
+          logoData: appData.logoData || DEFAULT_AMUTAN_LOGO,
+          bizName: appData.bizName || 'Amutan.co'
         });
       }
 
       closeModal('modal-invoice');
       previewInvoice(inv.id);
-    }
-
-    function openKhataSettlementModal(custId) {
-      const cust = (appData.customers || []).find(c => c.id === custId);
-      if (!cust) return;
-
-      const custInvoices = (appData.invoices || []).filter(i => i.custId === cust.id);
-      const totalBilled = custInvoices.reduce((a, b) => a + Number(b.total || 0), 0);
-      const invPaid = custInvoices.reduce((a, b) => a + Number(b.paidAmt || 0), 0);
-      const settlePaid = (appData.settlements || []).filter(s => s.custId === cust.id).reduce((a, b) => a + Number(b.amount || 0), 0);
-      const balanceDue = Math.max(0, totalBilled - (invPaid + settlePaid));
-
-      document.getElementById('settle-cust-id').value = cust.id;
-      document.getElementById('settle-cust-name').innerText = cust.name;
-      document.getElementById('settle-current-due').innerText = formatINR(balanceDue);
-      document.getElementById('settle-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('settle-amount').value = balanceDue;
-
-      openModal('modal-settlement');
-    }
-
-    function saveKhataSettlement(e) {
-      e.preventDefault();
-      const custId = document.getElementById('settle-cust-id').value;
-      const amount = Number(document.getElementById('settle-amount').value) || 0;
-      const date = document.getElementById('settle-date').value;
-      const payMode = document.getElementById('settle-paymode').value;
-      const note = document.getElementById('settle-note').value.trim();
-
-      const stl = {
-        id: 'stl_' + Date.now(),
-        custId,
-        date,
-        amount,
-        payMode,
-        note
-      };
-
-      if (!appData.settlements) appData.settlements = [];
-      appData.settlements.push(stl);
-
-      // Rebalance Invoices status for this customer
-      let remainingCredit = amount;
-      (appData.invoices || []).filter(i => i.custId === custId && i.dueAmt > 0).forEach(inv => {
-        if (remainingCredit <= 0) return;
-        if (remainingCredit >= inv.dueAmt) {
-          remainingCredit -= inv.dueAmt;
-          inv.paidAmt += inv.dueAmt;
-          inv.dueAmt = 0;
-          inv.status = 'Paid';
-        } else {
-          inv.paidAmt += remainingCredit;
-          inv.dueAmt -= remainingCredit;
-          inv.status = 'Partial';
-          remainingCredit = 0;
-        }
-      });
-
-      persist();
-      closeModal('modal-settlement');
-      previewPaymentVoucher(stl);
-    }
-
-    function previewPaymentVoucher(stl) {
-      const cust = (appData.customers || []).find(c => c.id === stl.custId) || { name: 'Customer' };
-      document.getElementById('voucher-printable').innerHTML = `
-        <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
-          <h2 style="margin:0; font-size:18px;">${appData.bizName || 'Kamadhenu Commercial Traders'}</h2>
-          <p style="margin:2px 0; font-size:11px; color:#64748b;">OFFICIAL CASH RECEIPT / PAYMENT VOUCHER</p>
-          <div style="font-size:12px; font-weight:700; margin-top:4px;">Voucher #: ${stl.id} | Date: ${stl.date}</div>
-        </div>
-        <div style="font-size:13px; line-height:1.8; margin-bottom:20px;">
-          Received with thanks from: <strong>${cust.name}</strong><br/>
-          The sum of: <strong style="font-size:16px; color:#15803d;">${formatINR(stl.amount)}</strong><br/>
-          Payment Mode: <strong>${stl.payMode}</strong><br/>
-          Remarks / Note: <em>${stl.note || 'Khata Clearance'}</em>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:12px;">
-          <div>Customer Signature</div>
-          <div>Authorized Signatory</div>
-        </div>
-      `;
-      openModal('modal-view-voucher');
-    }
-
-    function openItemModal(itemId = null) {
-      document.getElementById('item-edit-id').value = '';
-      document.getElementById('item-name').value = '';
-      document.getElementById('item-rate').value = '';
-      document.getElementById('item-stock').value = '';
-      document.getElementById('item-min-stock').value = '100';
-      openModal('modal-item');
-    }
-
-    function openQuickRestockModal(itemId) {
-      const it = (appData.items || []).find(x => x.id === itemId);
-      if (!it) return;
-      const addQty = prompt(`Restock ${it.name} (Current: ${it.stock} ${it.unit}). Enter additional quantity to ADD:`, '500');
-      if (addQty && !isNaN(addQty) && Number(addQty) > 0) {
-        it.stock += Number(addQty);
-        persist();
-        showToast(`Added ${addQty} ${it.unit} to stock!`);
-      }
-    }
-
-    function saveCatalogItem(e) {
-      e.preventDefault();
-      if (!appData.items) appData.items = [];
-      appData.items.push({
-        id: 'it_' + Date.now(),
-        name: document.getElementById('item-name').value.trim(),
-        rate: Number(document.getElementById('item-rate').value || 0),
-        unit: document.getElementById('item-unit').value.trim() || 'Unit',
-        stock: Number(document.getElementById('item-stock').value || 0),
-        minStock: Number(document.getElementById('item-min-stock').value || 50)
-      });
-      persist(); closeModal('modal-item'); showToast('Product Saved to Inventory');
-    }
-
-    function deleteCatalogItem(id) {
-      if (confirm('Delete catalog item?')) {
-        appData.items = appData.items.filter(it => it.id !== id);
-        persist();
-      }
     }
 
     function deleteInv(id) {
@@ -1520,20 +1569,39 @@
     }
 
     function openCustomerModal() { openModal('modal-customer'); }
+    
+    // SAVE CUSTOMER & AUTO-PROVISION USER ACCOUNT (USERNAME = PHONE, PASSWORD = PHONE)
     function saveCustomer(e) {
       e.preventDefault();
+      const name = document.getElementById('cust-name').value.trim();
+      const email = document.getElementById('cust-email').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
+      const address = document.getElementById('cust-address').value.trim();
+
+      const custId = 'c_' + Date.now();
+      const cleanLogin = phone.replace(/[^a-zA-Z0-9]/g, '') || custId;
+
       if (!appData.customers) appData.customers = [];
-      appData.customers.push({
-        id: 'c_' + Date.now(),
-        name: document.getElementById('cust-name').value.trim(),
-        email: document.getElementById('cust-email').value.trim(),
-        phone: document.getElementById('cust-phone').value.trim(),
-        address: document.getElementById('cust-address').value.trim()
-      });
-      persist(); closeModal('modal-customer'); showToast('Customer Saved');
+      appData.customers.push({ id: custId, name, email, phone, address });
+
+      // Automatically register user credential
+      registeredUsers[cleanLogin] = {
+        password: cleanLogin,
+        role: 'Client'
+      };
+
+      persist();
+      closeModal('modal-customer');
+      showToast(`Client saved! Login created: User: ${cleanLogin} / Pass: ${cleanLogin}`);
     }
+
     function deleteCustomer(id) {
-      if (confirm('Delete customer record?')) {
+      if (confirm('Delete client record?')) {
+        const cust = (appData.customers || []).find(c => c.id === id);
+        if (cust) {
+          const cleanLogin = (cust.phone || cust.id).replace(/[^a-zA-Z0-9]/g, '');
+          delete registeredUsers[cleanLogin];
+        }
         appData.customers = appData.customers.filter(c => c.id !== id);
         persist();
       }
@@ -1564,20 +1632,44 @@
     }
 
     function saveSettings() {
-      appData.bizName = document.getElementById('cfg-biz-name').value.trim() || 'Kamadhenu Traders';
+      appData.bizName = document.getElementById('cfg-biz-name').value.trim() || 'Amutan.co';
+      appData.upiId = document.getElementById('cfg-upi-id').value.trim();
+      appData.accentColor = document.getElementById('cfg-accent').value;
+      appData.bankName = document.getElementById('cfg-bank-name').value.trim();
+      appData.bankAcc = document.getElementById('cfg-bank-acc').value.trim();
+      appData.bankHolder = document.getElementById('cfg-bank-holder').value.trim();
+      appData.bankIfsc = document.getElementById('cfg-bank-ifsc').value.trim();
+      appData.bankSwift = document.getElementById('cfg-bank-swift').value.trim();
       appData.emailjsKey = document.getElementById('cfg-emailjs-key').value.trim();
       appData.emailjsService = document.getElementById('cfg-emailjs-service').value.trim();
       appData.emailjsTemplate = document.getElementById('cfg-emailjs-template').value.trim();
-      appData.upiId = document.getElementById('cfg-upi-id').value.trim();
-      appData.accentColor = document.getElementById('cfg-accent').value;
       persist();
-      showToast('Settings Synchronized');
+      showToast('Enterprise Settings Synchronized');
     }
 
-    function generateInvoiceHTML(inv, cust, accent, upi, logoData, bizName) {
-      const logoHTML = (logoData && logoData.trim() !== '') 
-        ? `<img src="${logoData}" alt="Logo" style="max-height: 52px; max-width: 140px; object-fit: contain; border-radius: 6px;" />`
-        : `<div style="width:44px; height:44px; background:${accent}; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:22px;">A</div>`;
+    function generateInvoiceHTML(inv, cust, config) {
+      const accent = config.accentColor || '#881337';
+      const logoHTML = `<img src="${config.logoData || DEFAULT_AMUTAN_LOGO}" alt="Logo" style="max-height: 58px; max-width: 140px; object-fit: contain; border-radius: 6px;" />`;
+
+      const vaultHTML = (inv.vault && inv.vault.length > 0) ? `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:20px;">
+          <strong style="font-size:10px; text-transform:uppercase; color:#64748b; display:block; margin-bottom:4px;">📎 Statement of Work & Project Attachments:</strong>
+          <div class="vault-grid">
+            ${inv.vault.map(v => `<a href="${v.url}" target="_blank" class="vault-chip">📄 ${v.title} <span style="color:#0284c7;">↗</span></a>`).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      const signStampHTML = inv.signOff ? `
+        <div style="border:2px solid #059669; background:#ecfdf5; border-radius:8px; padding:10px 14px; display:inline-flex; align-items:center; gap:12px; margin-top:12px;">
+          <img src="${inv.signOff.signature}" style="max-height:45px; max-width:110px; object-fit:contain;" alt="Signature" />
+          <div style="font-size:11px; text-align:left; color:#065f46;">
+            <div><strong>Digitally Authorized</strong></div>
+            <div>${inv.signOff.name} (${inv.signOff.title})</div>
+            <div style="font-size:9px; color:#047857;">${inv.signOff.timestamp}</div>
+          </div>
+        </div>
+      ` : '';
 
       return `
         <div style="color:#0f172a; font-family:sans-serif;">
@@ -1585,39 +1677,42 @@
             <div style="display:flex; gap:14px; align-items:center;">
               ${logoHTML}
               <div>
-                <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">${bizName || 'Commercial Traders'}</h1>
-                <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Commercial Billing & Procurement</p>
+                <h1 style="font-size:20px; font-weight:900; color:${accent}; margin:0;">${config.bizName || 'Amutan.co'}</h1>
+                <p style="font-size:11px; color:#64748b; margin:2px 0 0;">Enterprise Software Development & Cloud Solutions</p>
               </div>
             </div>
             <div style="text-align:right;">
-              <h2 style="font-size:20px; font-weight:900; margin:0; color:#334155;">BILL / INVOICE</h2>
+              <h2 style="font-size:20px; font-weight:900; margin:0; color:#334155;">TAX INVOICE</h2>
               <div style="font-size:12px; font-weight:700; color:#64748b; margin-top:2px;"># ${inv.num}</div>
               <div style="display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-top:4px; ${inv.status === 'Paid' ? 'background:#d1fae5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'}">${inv.status.toUpperCase()}</div>
             </div>
           </div>
 
-          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:20px; background:#f8fafc; border-radius:8px; padding:12px;">
             <div>
-              <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed To:</strong>
-              <div style="font-size:14px; font-weight:800; margin-top:2px;">${(cust && cust.name) || 'Customer / Party'}</div>
+              <strong style="color:#64748b; text-transform:uppercase; font-size:10px;">Billed Enterprise:</strong>
+              <div style="font-size:14px; font-weight:800; margin-top:2px;">${(cust && cust.name) || 'Client Organization'}</div>
               <div style="color:#64748b;">${(cust && cust.email) || ''} ${(cust && cust.phone) ? '• ' + cust.phone : ''}</div>
               <div style="color:#64748b;">${(cust && cust.address) || ''}</div>
             </div>
             <div style="text-align:right;">
-              <div><span style="color:#64748b;">Bill Date:</span> <strong>${inv.date}</strong></div>
-              <div><span style="color:#64748b;">Due Date:</span> <strong>${inv.due}</strong></div>
-              <div><span style="color:#64748b;">Pay Mode:</span> <strong>${inv.payMode || 'Direct'}</strong></div>
+              <div><span style="color:#64748b;">Project / SOW:</span> <strong>${inv.projName || 'Custom Engineering'}</strong></div>
+              <div><span style="color:#64748b;">PO Ref #:</span> <strong>${inv.poRef || 'N/A'}</strong></div>
+              <div><span style="color:#64748b;">Issue Date:</span> <strong>${inv.date}</strong> | <span style="color:#64748b;">Due:</span> <strong>${inv.due}</strong></div>
+              <div><span style="color:#64748b;">Payment Rail:</span> <strong>${inv.payMode || 'Wire (NEFT/RTGS)'}</strong></div>
             </div>
           </div>
+
+          ${vaultHTML}
 
           <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
             <thead>
               <tr style="background:${accent}15; border-bottom:2px solid ${accent}; text-align:left;">
                 <th style="padding:8px; width:30px;">#</th>
-                <th style="padding:8px;">Item Description</th>
-                <th style="padding:8px; text-align:center; width:60px;">Qty</th>
-                <th style="padding:8px; text-align:right; width:90px;">Rate (₹)</th>
-                <th style="padding:8px; text-align:right; width:100px;">Amount (₹)</th>
+                <th style="padding:8px;">Deliverable / Scope of Work</th>
+                <th style="padding:8px; text-align:center; width:80px;">Units / Hrs</th>
+                <th style="padding:8px; text-align:right; width:100px;">Rate (₹)</th>
+                <th style="padding:8px; text-align:right; width:120px;">Amount (₹)</th>
               </tr>
             </thead>
             <tbody>
@@ -1638,32 +1733,56 @@
               <div id="modal-qrcode-target" style="width:72px; height:72px;"></div>
               <div id="portal-qrcode-target" style="width:72px; height:72px;"></div>
               <div>
-                <strong style="color:#64748b; font-size:10px; text-transform:uppercase;">Scan UPI to Pay:</strong>
-                <div style="font-size:12px; font-weight:700; color:#0f172a;">${upi}</div>
-                <div style="font-size:11px; color:#64748b; margin-top:2px;">${inv.note || 'Thank you!'}</div>
+                <strong style="color:#64748b; font-size:10px; text-transform:uppercase;">Instant UPI Settlement:</strong>
+                <div style="font-size:12px; font-weight:700; color:#0f172a;">${config.upiId || 'amutan@upi'}</div>
+                <div style="font-size:11px; color:#64748b; margin-top:2px;">${inv.note || '30-day post deployment warranty.'}</div>
+                ${signStampHTML}
               </div>
             </div>
 
-            <div style="text-align:right; width:240px;">
+            <div style="text-align:right; width:260px;">
               <div style="display:flex; justify-content:space-between; margin-bottom:3px; color:#64748b;">
-                <span>Subtotal:</span> <span>${formatINR(inv.subtotal || inv.total)}</span>
+                <span>Milestone Subtotal:</span> <span>${formatINR(inv.subtotal || inv.total)}</span>
               </div>
-              ${inv.discount > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:3px; color:var(--rose);"><span>Discount:</span> <span>- ${formatINR(inv.discount)}</span></div>` : ''}
+              ${inv.discount > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:3px; color:var(--rose);"><span>Concession:</span> <span>- ${formatINR(inv.discount)}</span></div>` : ''}
               <div style="display:flex; justify-content:space-between; border-top:1px solid #e2e8f0; padding-top:4px; font-size:14px; font-weight:800; color:${accent};">
-                <span>Final Bill:</span> <span>${formatINR(inv.total)}</span>
+                <span>Final Project Value:</span> <span>${formatINR(inv.total)}</span>
               </div>
               <div style="display:flex; justify-content:space-between; margin-top:3px; color:#15803d; font-weight:700;">
-                <span>Amount Paid:</span> <span>${formatINR(inv.paidAmt || 0)}</span>
+                <span>Advance Collected:</span> <span>${formatINR(inv.paidAmt || 0)}</span>
               </div>
               <div style="display:flex; justify-content:space-between; margin-top:3px; color:#b45309; font-weight:800;">
-                <span>Khata Balance Due:</span> <span>${formatINR(inv.dueAmt || 0)}</span>
+                <span>Milestone Due:</span> <span>${formatINR(inv.dueAmt || 0)}</span>
               </div>
             </div>
           </div>
 
-          <div style="border-top:1px solid #e2e8f0; padding-top:12px; font-size:11px; display:flex; justify-content:space-between; color:#64748b;">
-            <div>${bizName || 'Commercial Traders'}</div>
-            <div>Computer Generated Commercial Bill • Direct Settlement</div>
+          <div class="bank-matrix-box">
+            <div class="bank-matrix-item">
+              <strong>Account Holder</strong>
+              <span>${config.bankHolder || 'Amutan Technologies Pvt Ltd'}</span>
+            </div>
+            <div class="bank-matrix-item">
+              <strong>Bank Name & Branch</strong>
+              <span>${config.bankName || 'HDFC Bank, Anna Nagar'}</span>
+            </div>
+            <div class="bank-matrix-item">
+              <strong>Account Number</strong>
+              <span>${config.bankAcc || '50200098765432'}</span>
+            </div>
+            <div class="bank-matrix-item">
+              <strong>IFSC (NEFT/RTGS)</strong>
+              <span>${config.bankIfsc || 'HDFC0000240'}</span>
+            </div>
+            <div class="bank-matrix-item">
+              <strong>SWIFT / BIC</strong>
+              <span>${config.bankSwift || 'HDFCINBBXXX'}</span>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #e2e8f0; margin-top:16px; padding-top:12px; font-size:11px; display:flex; justify-content:space-between; color:#64748b;">
+            <div>${config.bizName || 'Amutan.co'} • Engineering Digital Excellence</div>
+            <div>Computer Generated Software Invoice • Digital Milestone Sign-off</div>
           </div>
         </div>
       `;
@@ -1673,7 +1792,7 @@
       const el = document.getElementById(elemId);
       if (!el) return;
       el.innerHTML = '';
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=CommercialPayment&am=${total}&cu=INR`;
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=AmutanPayment&am=${total}&cu=INR`;
       new QRCode(el, {
         text: upiUrl,
         width: 72,
@@ -1684,66 +1803,15 @@
       });
     }
 
-    function generateThermalReceipt(inv, cust) {
-      return `
-        <div style="text-align:center; margin-bottom:10px;">
-          <h3 style="margin:0; font-size:16px;">${appData.bizName || 'Commercial Traders'}</h3>
-          <p style="margin:2px 0; font-size:10px;">COMMERCIAL RECEIPT</p>
-          <p style="margin:2px 0; font-size:10px;">Bill #: ${inv.num} | Date: ${inv.date}</p>
-        </div>
-        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
-        <div style="font-size:11px; margin-bottom:6px;">
-          <strong>Party:</strong> ${(cust && cust.name) || 'Cash Client'}<br/>
-          <strong>Pay Mode:</strong> ${inv.payMode || 'Cash'}
-        </div>
-        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
-        <table style="width:100%; font-size:11px; text-align:left;">
-          ${inv.items.map(it => `
-            <tr>
-              <td>${it.desc}<br/>${it.qty} x ₹${it.rate}</td>
-              <td style="text-align:right; vertical-align:bottom;"><strong>${formatINR(it.amt)}</strong></td>
-            </tr>
-          `).join('')}
-        </table>
-        <hr style="border:none; border-top:1px dashed #000; margin:6px 0;" />
-        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold;">
-          <span>NET BILL:</span>
-          <span>${formatINR(inv.total)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:2px;">
-          <span>PAID NOW:</span>
-          <span>${formatINR(inv.paidAmt || 0)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; margin-top:2px;">
-          <span>KHATA DUE:</span>
-          <span>${formatINR(inv.dueAmt || 0)}</span>
-        </div>
-        <div style="font-size:10px; text-align:center; margin-top:10px;">
-          Status: ${inv.status.toUpperCase()}<br/>
-          Thank you for your business!
-        </div>
-      `;
-    }
-
     function previewInvoice(id) {
       const inv = appData.invoices.find(i => i.id === id);
       const cust = appData.customers.find(c => c.id === inv.custId);
       if (!inv) return;
 
-      document.getElementById('printable-invoice').innerHTML = generateInvoiceHTML(
-        inv, cust, appData.accentColor || '#0284c7', appData.upiId || 'amutantech@okaxis', appData.logoData || '', appData.bizName || 'Commercial Traders'
-      );
-      generateQRCode('modal-qrcode-target', appData.upiId || 'amutantech@okaxis', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
+      document.getElementById('printable-invoice').innerHTML = generateInvoiceHTML(inv, cust, appData);
+      generateQRCode('modal-qrcode-target', appData.upiId || 'amutan@upi', inv.dueAmt > 0 ? inv.dueAmt : inv.total);
 
       document.getElementById('btn-print-a4').onclick = () => window.print();
-      document.getElementById('btn-print-thermal').onclick = () => {
-        const thermalEl = document.getElementById('thermal-receipt');
-        thermalEl.innerHTML = generateThermalReceipt(inv, cust);
-        thermalEl.classList.remove('hidden');
-        window.print();
-        thermalEl.classList.add('hidden');
-      };
-
       openModal('modal-view-invoice');
     }
   </script>
